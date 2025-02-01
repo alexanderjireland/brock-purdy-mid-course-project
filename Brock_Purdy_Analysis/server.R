@@ -39,7 +39,7 @@ function(input, output, session) {
         ggplot(aes(x=any.a, y=qb_epa, color=passer_player_name=="B.Purdy")) +
         geom_vline(xintercept = quantile(qb_game_data$any.a, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)) +
         geom_hline(yintercept = quantile(qb_game_data$qb_epa, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)) + 
-        geom_point()
+        geom_point(alpha = .2)
       
     })
 }
