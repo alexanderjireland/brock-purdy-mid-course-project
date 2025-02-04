@@ -16,13 +16,15 @@ get_quartiles <- function (col_name){
 # Define server logic required to draw a histogram
 function(input, output, session) {
 
-    output$anya_pr_Plot <- renderPlot({
+    output$plot_model_actual <- renderPlot({
 
-      qb_game_data |> 
-          ggplot(aes(x=any.a, y=passer_rating, color=passer_player_name=="B.Purdy")) +
-          geom_point()
+      ggplot(data = qb_comparison, aes(x=predicted_qb_passer_rating, 
+                                       y=actual_qb_passer_rating, 
+                                       color = passer_player_name == input$qb_name, 
+                                       alpha = .5)) +
+        geom_abline(a=0, b=1) + 
+        geom_point()
       
-
     })
 
     output$epa_pr_Plot <- renderPlot({

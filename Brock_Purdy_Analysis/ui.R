@@ -11,25 +11,24 @@ library(shiny)
 
 # Define UI for application that draws a histogram
 fluidPage(
-
-    # Application title
-    titlePanel("Brock Purdy Analysis"),
-
-    # Sidebar with a slider input for number of bins
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-            plotOutput("anya_pr_Plot"),
-            plotOutput("epa_pr_Plot"),
-            plotOutput("anya_epa_Plot")
-        )
+  
+  # Application title
+  titlePanel("Brock Purdy Analysis"),
+  
+  # Sidebar with a slider input for number of bins
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("qb_name",
+                  "Select Quarterback",
+                  choices = qb_clean |> distinct(passer_player_name) |> pull(passer_player_name) |> sort(),
+                  selected = "B.Purdy")
+    ),
+    
+    # Show a plot of the generated distribution
+    mainPanel(
+      tabsetPanel(
+        tabPanel("Model vs. Reality", plotOutput("plot_model_actual")),
+      )
     )
+  )
 )
