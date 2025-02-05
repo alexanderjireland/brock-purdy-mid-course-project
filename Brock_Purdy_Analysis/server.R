@@ -16,6 +16,7 @@ get_quartiles <- function (col_name){
 # Define server logic required to draw a histogram
 function(input, output, session) {
   
+  
   filtered_qbs_input <- reactive({
     qb_clean |> 
       group_by(passer_player_name) |> 
@@ -53,7 +54,12 @@ function(input, output, session) {
   
   filtered_qb_comparison <- reactive({
     qb_comparison |> 
-      filter(num_games >= input$min_games)
+      filter(passer_player_name >= input$min_games)
+  })
+  
+  filtered_qb_clean <- reactive({
+    qb_clean |> 
+      filter(passer_player_name %in% filtered_qbs_input())
   })
   
   filtered_qb_comparison_grouped <- reactive({
@@ -94,26 +100,32 @@ function(input, output, session) {
     # https://rpubs.com/pjozefek/576206
     
     # use plotly to create surface plot??
+
+    filtered_qb_data <- filtered_qb_clean()
     req(input$x_axis, input$y_axis , input$z_axis)
     rgl.open(useNULL = TRUE)
     
-    x <- qb_clean[[input$x_axis]] 
-    y <- qb_clean[[input$y_axis]]
-    z <- qb_clean[[input$z_axis]]
+    x <- filtered_qb_data[[input$x_axis]] 
+    y <- filtered_qb_data[[input$y_axis]]
+    z <- filtered_qb_data[[input$z_axis]]
     
+    x_range <- range(qb_clean[[input$x_axis]], na.rm = TRUE)
+    y_range <- range(qb_clean[[input$y_axis]], na.rm = TRUE)
+    z_range <- range(qb_clean[[input$z_axis]], na.rm = TRUE)
     
     bg3d(color = 'white')
-    qb_colors <- rainbow(length(unique(qb_clean$passer_player_name)))[as.factor(qb_clean$passer_player_name)]
+    qb_colors <- rainbow(length(unique(filtered_qb_data$passer_player_name)))[as.factor(filtered_qb_data$passer_player_name)]
     
-    model <- lm(z ~ x + y, data = qb_clean)
-    x_seq <- seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE), length.out = 20)
-    y_seq <- seq(min(y, na.rm = TRUE), max(y, na.rm = TRUE), length.out = 20)
+    model <- lm(z ~ x + y, data = filtered_qb_data)
+    x_seq <- seq(x_range[1], x_range[2], length.out = 20)
+    y_seq <- seq(y_range[1], y_range[2], length.out = 20)
     grid <- expand.grid(x=x_seq, y=y_seq)
     grid$z <- predict(model, newdata = grid)
     
     plot3d(x, y, z,
            col=qb_colors,
-           xlab = input$x_axis, ylab = input$y_axis, zlab = input$z_axis)
+           xlab = input$x_axis, ylab = input$y_axis, zlab = input$z_axis,
+           xlim = x_range, ylim = y_range, zlim = z_range)
     
     surface3d(unique(grid$x), unique(grid$y), matrix(grid$z, nrow = 20),
               color = 'grey', alpha = .5)
