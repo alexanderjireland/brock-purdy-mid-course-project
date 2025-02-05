@@ -26,8 +26,8 @@ function(input, output, session) {
     dependent_var <- dependent_var_hashmap[input$dependent_var]
     
     ggplot(data = filtered_qb_comparison(), aes(x=.data[[paste0("predicted_qb_", dependent_var)]], 
-                                     y=.data[[paste0("actual_qb_", dependent_var)]], 
-                                     color = passer_player_name == input$qb_name)) +
+                                                y=.data[[paste0("actual_qb_", dependent_var)]], 
+                                                color = passer_player_name == input$qb_name)) +
       ggtitle(glue("Actual vs. Predicted {input$dependent_var}")) +
       xlab(glue("Predicted {input$dependent_var}")) +
       ylab(glue("Actual {input$dependent_var}")) +
@@ -38,6 +38,13 @@ function(input, output, session) {
                      y=.data[[paste0("actual_qb_", dependent_var)]], 
                      alpha = 1, size = 3
                  )
+      ) +
+      geom_point(data = filtered_qb_comparison() |> filter(passer_player_name %in% ten_highest_paid_qbs_2024), 
+                 aes(x=.data[[paste0("predicted_qb_", dependent_var)]], 
+                     y=.data[[paste0("actual_qb_", dependent_var)]], 
+                     alpha = 1, size = 2, color = 'blue'
+                 )
+                 
       ) +
       geom_label_repel(data = filtered_qb_comparison() |> filter(passer_player_name == input$qb_name), aes(label = passer_player_name), nudge_y = .2)
     

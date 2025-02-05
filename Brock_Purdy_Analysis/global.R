@@ -22,13 +22,17 @@ top_ten_paid_qbs <- qb_game_data |>
   filter(passer_player_name %in% ten_highest_paid_qbs_2024)
 
 qb_clean <- qb_game_data |> 
-    select(passer_player_name, any_a, qb_epa, passer_rating, yards_after_catch, percent_pass_yds_from_yac, sacks_per_dropback, short_pass, percent_short_pass) |> 
+    select(passer_player_name, any_a, qb_epa, passer_rating, yards_after_catch, percent_pass_yds_from_yac, sacks_per_dropback, short_pass, percent_short_pass, team_rush_epa) |> 
     mutate_if(is.numeric, ~ replace(., !is.finite(.), NA)) |> 
     na.omit()
 
 create_dependent_var_model <- function (dependent_var) {
-    lm(as.formula(glue("{dependent_var} ~ yards_after_catch + percent_pass_yds_from_yac + sacks_per_dropback + short_pass + percent_short_pass")), data = qb_clean) 
-  # working on rush_epa kinks, should add to lm
+  if (dependent_var == 'passer_rating') {
+    lm(as.formula(glue("{dependent_var} ~ yards_after_catch + percent_pass_yds_from_yac + sacks_per_dropback + short_pass + percent_short_pass + team_rush_epa")), data = qb_clean)
+  }
+  else {
+    lm(as.formula(glue("{dependent_var} ~ yards_after_catch + percent_pass_yds_from_yac + sacks_per_dropback + short_pass + percent_short_pass")), data = qb_clean)
+  }
 }
 
 anya_model <- create_dependent_var_model('any_a')
