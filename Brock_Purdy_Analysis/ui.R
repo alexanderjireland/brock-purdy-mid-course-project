@@ -18,16 +18,20 @@ fluidPage(
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
+      sliderInput("min_games",
+                  "Minimum Number of Games Played",
+                  min = 10, max = 100, value = 10),
       selectInput("qb_name",
                   "Select Quarterback",
-                  choices = qb_clean |> distinct(passer_player_name) |> pull(passer_player_name) |> sort(),
-                  selected = "B.Purdy"),
+                  choices = NULL,
+                  selected = NULL,
+                  multiple = FALSE,
+                  selectize = TRUE),
       selectInput("dependent_var",
                   "Select Dependent Variable",
                   choices = c("EPA", "ANY/A", "Passer Rating")),
-      sliderInput("min_games",
-                  "Minimum Number of Games Played",
-                  min = 10, max = 100, value = 10)
+      textOutput('qb_error')
+      
     ),
     
     #work on creating a selection for dependent var
