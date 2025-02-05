@@ -74,7 +74,8 @@ function(input, output, session) {
       x=.data[[paste0("predicted_qb_", dependent_var)]], 
       y=.data[[paste0("actual_qb_", dependent_var)]], 
       color = group,
-      text = paste("QB:", passer_player_name)
+      text = paste("QB:", passer_player_name, "<br>",
+                   "Av. Salary per Year:", avg_salary_year)
     )) +
       ggtitle(glue("Actual vs. Predicted {input$dependent_var}")) +
       xlab(glue("Predicted {input$dependent_var}")) +
