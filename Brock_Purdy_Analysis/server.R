@@ -124,11 +124,13 @@ function(input, output, session) {
     
     plot3d(x, y, z,
            col=qb_colors,
+           type = 'p',
+           size = 3,
            xlab = input$x_axis, ylab = input$y_axis, zlab = input$z_axis,
            xlim = x_range, ylim = y_range, zlim = z_range)
     
     surface3d(unique(grid$x), unique(grid$y), matrix(grid$z, nrow = 20),
-              color = 'grey', alpha = .5)
+              color = 'red', alpha = .5)
     
     rglwidget()
   })
