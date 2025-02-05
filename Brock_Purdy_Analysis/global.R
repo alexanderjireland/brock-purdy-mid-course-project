@@ -3,6 +3,7 @@ library(glue)
 library(ggrepel)
 library(plotly)
 library(scales)
+library(rgl)
 
 qb_game_data = read.csv("../data/qb_game_data.csv")
 qb_salary = read.csv("../data/QB_Salary.csv")

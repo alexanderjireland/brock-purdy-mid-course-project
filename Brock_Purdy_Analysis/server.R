@@ -89,23 +89,14 @@ function(input, output, session) {
     ggplotly(p, tooltip = "text") 
   })
   
-  
-  
-  output$epa_pr_Plot <- renderPlot({
+  output$multi_scatter_plot <- renderRglwidget({
+    rgl.open(useNULL = TRUE)
     
-    qb_game_data |> 
-      ggplot(aes(x=qb_epa, y=passer_rating, color=passer_player_name=="B.Purdy")) +
-      geom_point()
+    qb_colors <- rainbow(length(unique(qb_clean$passer_player_name)))[as.factor(qb_clean$passer_player_name)]
     
-  })
-  
-  output$anya_epa_Plot <- renderPlot({
-    
-    qb_game_data |> 
-      ggplot(aes(x=any.a, y=qb_epa, color=passer_player_name=="B.Purdy")) +
-      geom_vline(xintercept = quantile(qb_game_data$any.a, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)) +
-      geom_hline(yintercept = quantile(qb_game_data$qb_epa, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)) + 
-      geom_point(alpha = .2)
-    
+    plot3d(x=qb_clean$short_pass, y=qb_clean$yards_after_catch, z=qb_clean$qb_epa,
+           col=qb_colors,
+           xlab = 'Number of Short Passes', ylab = "Yards After the Catch", zlab = "QB EPA")
+    rglwidget()
   })
 }

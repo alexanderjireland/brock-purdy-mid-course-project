@@ -43,8 +43,8 @@ fluidPage(
     # Show a plot of the generated distribution
     mainPanel(
       tabsetPanel(
-        tabPanel("Model vs. Reality", plotlyOutput("plot_model_actual"))
-        
+        tabPanel("Model vs. Reality", plotlyOutput("plot_model_actual")),
+        tabPanel("3D Plot", rglwidgetOutput("multi_scatter_plot", width = 800, height = 600))
       )
     )
   )
