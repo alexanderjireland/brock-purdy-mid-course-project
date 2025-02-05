@@ -1,5 +1,7 @@
 library(tidyverse)
 library(glue)
+library(ggrepel)
+library(plotly)
 
 qb_game_data = read.csv("../data/qb_game_data.csv")
 
@@ -49,6 +51,15 @@ qb_comparison <- qb_clean |>
          predicted_qb_passer_rating = mean(predicted_passer_rating),
          num_games = n())
 
+keys <- c("EPA", "ANY/A", "Passer Rating")
+values <- c("epa", "anya", "passer_rating")
+dependent_var_hashmap <- setNames(values, keys)
+
+max_games <- qb_clean |> 
+  group_by(passer_player_name) |> 
+  summarize(num_games = n()) |> 
+  summarize(max_games = max(num_games)) |> 
+  pull(max_games)
 
 #ggplot(data = qb_comparison, aes(x=predicted_qb_epa, y=actual_qb_epa, color = passer_player_name == "B.Purdy")) +
   #geom_abline(a=0, b=1) + 

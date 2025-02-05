@@ -21,7 +21,13 @@ fluidPage(
       selectInput("qb_name",
                   "Select Quarterback",
                   choices = qb_clean |> distinct(passer_player_name) |> pull(passer_player_name) |> sort(),
-                  selected = "B.Purdy")
+                  selected = "B.Purdy"),
+      selectInput("dependent_var",
+                  "Select Dependent Variable",
+                  choices = c("EPA", "ANY/A", "Passer Rating")),
+      sliderInput("min_games",
+                  "Select Minimum Number of Games Played",
+                  min = 10, max = 100, value = 10)
     ),
     
     #work on creating a selection for dependent var
