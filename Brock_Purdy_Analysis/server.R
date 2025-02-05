@@ -89,14 +89,20 @@ function(input, output, session) {
     ggplotly(p, tooltip = "text") 
   })
   
+  
   output$multi_scatter_plot <- renderRglwidget({
     rgl.open(useNULL = TRUE)
     
+    bg3d(color = 'white')
     qb_colors <- rainbow(length(unique(qb_clean$passer_player_name)))[as.factor(qb_clean$passer_player_name)]
     
-    plot3d(x=qb_clean$short_pass, y=qb_clean$yards_after_catch, z=qb_clean$qb_epa,
+    plot3d(x=qb_clean[[input$x_axis]], y=qb_clean[[input$y_axis]], z=qb_clean[[input$z_axis]],
            col=qb_colors,
-           xlab = 'Number of Short Passes', ylab = "Yards After the Catch", zlab = "QB EPA")
+           xlab = input$x_axis, ylab = input$y_axis, zlab = input$z_axis)
+    
+    
     rglwidget()
   })
 }
+
+

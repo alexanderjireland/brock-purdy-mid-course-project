@@ -38,6 +38,10 @@ qb_clean <- qb_game_data |>
     mutate(avg_year = as.numeric((gsub(",","", sub(".", "", avg_year))))) |> 
     na.omit()
 
+qb_clean_numeric_cols <- qb_clean |> 
+  select(where(is.numeric)) |> 
+  names()
+
 create_dependent_var_model <- function (dependent_var) {
   if (dependent_var == 'passer_rating') {
     lm(as.formula(glue("{dependent_var} ~ yards_after_catch + percent_pass_yds_from_yac + sacks_per_dropback + short_pass + percent_short_pass + team_rush_epa")), data = qb_clean)

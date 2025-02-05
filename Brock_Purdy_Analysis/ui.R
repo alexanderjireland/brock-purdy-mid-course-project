@@ -20,17 +20,8 @@ fluidPage(
     sidebarPanel(
       sliderInput("min_games",
                   "Minimum Number of Games Played",
-                  min = 10, max = 100, value = 10),
-      selectInput("qb_name",
-                  "Select Quarterback",
-                  choices = NULL,
-                  selected = NULL,
-                  multiple = FALSE,
-                  selectize = TRUE),
-      selectInput("dependent_var",
-                  "Select Dependent Variable",
-                  choices = c("EPA", "ANY/A", "Passer Rating")),
-      textOutput('qb_error')
+                  min = 10, max = 100, value = 10)
+      
       
     ),
     
@@ -43,8 +34,29 @@ fluidPage(
     # Show a plot of the generated distribution
     mainPanel(
       tabsetPanel(
-        tabPanel("Model vs. Reality", plotlyOutput("plot_model_actual")),
-        tabPanel("3D Plot", rglwidgetOutput("multi_scatter_plot", width = 800, height = 600))
+        tabPanel("Model vs. Reality", plotlyOutput("plot_model_actual"),
+                 selectInput("qb_name",
+                             "Select Quarterback",
+                             choices = NULL,
+                             selected = NULL,
+                             multiple = FALSE,
+                             selectize = TRUE),
+                 selectInput("dependent_var",
+                             "Select Dependent Variable",
+                             choices = c("EPA", "ANY/A", "Passer Rating")),
+                 textOutput('qb_error')),
+        tabPanel("3D Plot", 
+                 selectInput('x_axis',
+                             "Select x-axis",
+                             choices = qb_clean_numeric_cols),
+                 selectInput('y_axis',
+                             "Select y-axis",
+                             choices = qb_clean_numeric_cols),
+                 selectInput('z_axis',
+                             "Select z-axis",
+                             choices = qb_clean_numeric_cols),
+                 rglwidgetOutput("multi_scatter_plot", width = 800, height = 600)
+                 )
       )
     )
   )
