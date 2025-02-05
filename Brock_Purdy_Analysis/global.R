@@ -2,13 +2,14 @@ library(tidyverse)
 library(glue)
 library(ggrepel)
 library(plotly)
+library(scales)
 
 qb_game_data = read.csv("../data/qb_game_data.csv")
 qb_salary = read.csv("../data/QB_Salary.csv")
 
 qb_salary <- qb_salary |> 
-  mutate(player_passer_name = paste0(substr(sub(" .*", "", Player), 1, 1), ".", sub(".* ", "", Player))) |> 
-  select(player_passer_name, Avg..Year)
+  mutate(passer_player_name = paste0(substr(sub(" .*", "", Player), 1, 1), ".", sub(".* ", "", Player))) |> 
+  select(passer_player_name, Avg..Year)
 
 qb_game_data <- merge(qb_game_data, qb_salary)
 
@@ -33,6 +34,7 @@ top_ten_paid_qbs <- qb_game_data |>
 qb_clean <- qb_game_data |> 
     select(avg_year, passer_player_name, any_a, qb_epa, passer_rating, yards_after_catch, percent_pass_yds_from_yac, sacks_per_dropback, short_pass, percent_short_pass, team_rush_epa) |> 
     mutate_if(is.numeric, ~ replace(., !is.finite(.), NA)) |> 
+    mutate(avg_year = as.numeric((gsub(",","", sub(".", "", avg_year))))) |> 
     na.omit()
 
 create_dependent_var_model <- function (dependent_var) {
@@ -63,7 +65,7 @@ qb_comparison <- qb_clean |>
          actual_qb_passer_rating = mean(passer_rating),
          predicted_qb_passer_rating = mean(predicted_passer_rating),
          num_games = n(),
-         avg_salary_year = first(avg_year))
+         avg_salary_year = mean(avg_year))
 
 keys <- c("EPA", "ANY/A", "Passer Rating")
 values <- c("epa", "anya", "passer_rating")
