@@ -21,33 +21,34 @@ function(input, output, session) {
       filter(num_games >= input$min_games)
   })
   
+  filtered_qb_comparison_grouped <- reactive({
+    filtered_qb_comparison() |> 
+    mutate(group = case_when(
+      passer_player_name == input$qb_name ~ "Selected QB",
+      passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top Paid QBs",
+      TRUE ~ "Other QBs"
+    ))
+  })
+  
   output$plot_model_actual <- renderPlot({
+    
+
+    
     
     dependent_var <- dependent_var_hashmap[input$dependent_var]
     
-    ggplot(data = filtered_qb_comparison(), aes(x=.data[[paste0("predicted_qb_", dependent_var)]], 
-                                                y=.data[[paste0("actual_qb_", dependent_var)]], 
-                                                color = passer_player_name == input$qb_name)) +
+    ggplot(data = filtered_qb_comparison_grouped(), aes(
+      x=.data[[paste0("predicted_qb_", dependent_var)]], 
+      y=.data[[paste0("actual_qb_", dependent_var)]], 
+      color = group
+    )) +
       ggtitle(glue("Actual vs. Predicted {input$dependent_var}")) +
       xlab(glue("Predicted {input$dependent_var}")) +
       ylab(glue("Actual {input$dependent_var}")) +
-      geom_abline(a=0, b=1) + 
-      geom_point(aes(alpha = 1), size = 1) +
-      geom_point(data = filtered_qb_comparison() |> filter(passer_player_name == input$qb_name), 
-                 aes(x=.data[[paste0("predicted_qb_", dependent_var)]], 
-                     y=.data[[paste0("actual_qb_", dependent_var)]], 
-                     alpha = 1, size = 3
-                 )
-      ) +
-      geom_point(data = filtered_qb_comparison() |> filter(passer_player_name %in% ten_highest_paid_qbs_2024), 
-                 aes(x=.data[[paste0("predicted_qb_", dependent_var)]], 
-                     y=.data[[paste0("actual_qb_", dependent_var)]], 
-                     alpha = 1, size = 2, color = 'blue'
-                 )
-                 
-      ) +
-      geom_label_repel(data = filtered_qb_comparison() |> filter(passer_player_name == input$qb_name), aes(label = passer_player_name), nudge_y = .2)
-    
+      geom_abline(a=0, b=1, linetype = 'dashed') + 
+      geom_point(aes(alpha = .7), size = 1) +
+      scale_color_manual(values = c("Selected QB" = "red", "Top Paid QBs" = "blue", "Other QBs" = 'grey')) +
+      geom_label_repel(data = filtered_qb_comparison_grouped() |> filter(passer_player_name == input$qb_name), aes(label = passer_player_name), nudge_y = .2)
     
   })
   

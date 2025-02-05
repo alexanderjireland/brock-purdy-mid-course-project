@@ -26,7 +26,7 @@ fluidPage(
                   "Select Dependent Variable",
                   choices = c("EPA", "ANY/A", "Passer Rating")),
       sliderInput("min_games",
-                  "Select Minimum Number of Games Played",
+                  "Minimum Number of Games Played",
                   min = 10, max = 100, value = 10)
     ),
     
