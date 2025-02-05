@@ -43,7 +43,7 @@ fluidPage(
     # Show a plot of the generated distribution
     mainPanel(
       tabsetPanel(
-        tabPanel("Model vs. Reality", plotOutput("plot_model_actual"))
+        tabPanel("Model vs. Reality", plotlyOutput("plot_model_actual"))
         
       )
     )
