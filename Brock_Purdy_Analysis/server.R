@@ -91,15 +91,32 @@ function(input, output, session) {
   
   
   output$multi_scatter_plot <- renderRglwidget({
+    # https://rpubs.com/pjozefek/576206
+    
+    # use plotly to create surface plot??
+    req(input$x_axis, input$y_axis , input$z_axis)
     rgl.open(useNULL = TRUE)
+    
+    x <- qb_clean[[input$x_axis]] 
+    y <- qb_clean[[input$y_axis]]
+    z <- qb_clean[[input$z_axis]]
+    
     
     bg3d(color = 'white')
     qb_colors <- rainbow(length(unique(qb_clean$passer_player_name)))[as.factor(qb_clean$passer_player_name)]
     
-    plot3d(x=qb_clean[[input$x_axis]], y=qb_clean[[input$y_axis]], z=qb_clean[[input$z_axis]],
+    model <- lm(z ~ x + y, data = qb_clean)
+    x_seq <- seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE), length.out = 20)
+    y_seq <- seq(min(y, na.rm = TRUE), max(y, na.rm = TRUE), length.out = 20)
+    grid <- expand.grid(x=x_seq, y=y_seq)
+    grid$z <- predict(model, newdata = grid)
+    
+    plot3d(x, y, z,
            col=qb_colors,
            xlab = input$x_axis, ylab = input$y_axis, zlab = input$z_axis)
     
+    surface3d(unique(grid$x), unique(grid$y), matrix(grid$z, nrow = 20),
+              color = 'grey', alpha = .5)
     
     rglwidget()
   })
