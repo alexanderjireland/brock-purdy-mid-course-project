@@ -26,7 +26,10 @@ fluidPage(
                   choices = qb_clean |> distinct(coach) |> pull(coach) |> sort(),
                   selected = "Kyle Shanahan",
                   selectize = TRUE
-                  )
+                  ),
+      checkboxInput("active_players",
+         "Active Players Only",
+         FALSE)
     ),
     
     #work on creating a selection for dependent var

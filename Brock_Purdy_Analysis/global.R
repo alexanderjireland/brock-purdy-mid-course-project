@@ -19,7 +19,9 @@ names(qb_game_data)[names(qb_game_data) == 'Avg..Year'] <- 'avg_year'
 names(qb_game_data)[names(qb_game_data) == 'posteam'] <- 'team'
 
 qb_game_data <- qb_game_data |> 
-  mutate(team = str_replace_all(team, "\\bLA\\b", 'LAR'))
+  mutate(team = str_replace_all(team, "\\bLA\\b", 'LAR'),
+         retired = is.na(avg_year))
+
 merge_teamnames_map <- c("GNB" = "GB",
                          "KAN" = "KC",
                          "NOR" = "NO",
@@ -53,7 +55,7 @@ top_ten_paid_qbs <- qb_game_data |>
   filter(passer_player_name %in% ten_highest_paid_qbs_2024)
 
 qb_clean <- qb_game_data |> 
-    select(avg_year, coach, team, home_team, away_team, year, passer_player_name, any_a, qb_epa, passer_rating, yards_after_catch, percent_pass_yds_from_yac, sacks_per_dropback, short_pass, percent_short_pass, team_rush_epa) |> 
+    select(avg_year, coach, team, home_team, away_team, year, passer_player_name, any_a, qb_epa, passer_rating, yards_after_catch, percent_pass_yds_from_yac, sacks_per_dropback, short_pass, percent_short_pass, team_rush_epa, retired) |> 
     mutate_if(is.numeric, ~ replace(., !is.finite(.), NA)) |> 
     mutate(avg_year = as.numeric((gsub(",","", sub(".", "", avg_year)))))
 
@@ -89,7 +91,8 @@ qb_comparison <- qb_clean |>
          actual_qb_passer_rating = mean(passer_rating),
          predicted_qb_passer_rating = mean(predicted_passer_rating),
          num_games = n(),
-         avg_salary_year = mean(avg_year))
+         avg_salary_year = mean(avg_year),
+         retired = first(retired))
 
 keys <- c("EPA", "ANY/A", "Passer Rating")
 values <- c("epa", "anya", "passer_rating")

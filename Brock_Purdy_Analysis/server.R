@@ -55,7 +55,7 @@ function(input, output, session) {
   filtered_qb_comparison <- reactive({
     qb_comparison |> 
       group_by(passer_player_name) |> 
-      filter(num_games >= input$min_games) |> 
+      filter(num_games >= input$min_games & !(input$active_players & retired)) |> 
       ungroup()
   })
   
@@ -79,15 +79,18 @@ function(input, output, session) {
   })
   
   output$plot_model_actual <- renderPlotly({
-  
+    
     dependent_var <- dependent_var_hashmap[input$dependent_var]
     
     p <- ggplot(data = filtered_qb_comparison_grouped(), aes(
       x=.data[[paste0("predicted_qb_", dependent_var)]], 
       y=.data[[paste0("actual_qb_", dependent_var)]], 
       color = Group,
-      text = paste("QB:", passer_player_name, "<br>",
-                   "Av. Salary per Year:", dollar(avg_salary_year))
+      text = ifelse(!is.na(avg_salary_year),
+                    paste("QB:", passer_player_name, "<br>",
+                          "APY Salary (2025):", dollar(avg_salary_year)),
+                    paste("QB:", passer_player_name, "<br>",
+                          "Retired"))
     )) +
       ggtitle(glue("Actual vs. Predicted {input$dependent_var}")) +
       xlab(glue("Predicted {input$dependent_var}")) +
@@ -96,6 +99,10 @@ function(input, output, session) {
       geom_point(alpha = .7, size = 1) +
       scale_color_manual(values = setNames(c("red", "springgreen4", "blue", "orange", "grey"),
                                            c("Brock Purdy", "Selected QB", "Top Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))) +
+      coord_cartesian(xlim = c(min(qb_comparison[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE),
+                               max(qb_comparison[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE)),
+                      ylim = c(min(qb_comparison[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE),
+                               max(qb_comparison[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE))) +
       geom_text(data = filtered_qb_comparison_grouped() |> filter(passer_player_name %in% c("B.Purdy", input$qb_name)), 
                 aes(label = passer_player_name))
     
@@ -107,7 +114,7 @@ function(input, output, session) {
     # https://rpubs.com/pjozefek/576206
     
     # use plotly to create surface plot??
-
+    
     filtered_qb_data <- filtered_qb_clean()
     req(input$x_axis, input$y_axis , input$z_axis)
     rgl.open(useNULL = TRUE)
