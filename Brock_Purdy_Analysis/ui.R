@@ -20,9 +20,13 @@ fluidPage(
     sidebarPanel(
       sliderInput("min_games",
                   "Minimum Number of Games Played",
-                  min = 10, max = 100, value = 10)
-      
-      
+                  min = 10, max = 100, value = 10),
+      selectInput("coach",
+                  "Select Coach",
+                  choices = qb_clean |> distinct(coach) |> pull(coach) |> sort(),
+                  selected = "Kyle Shanahan",
+                  selectize = TRUE
+                  )
     ),
     
     #work on creating a selection for dependent var
