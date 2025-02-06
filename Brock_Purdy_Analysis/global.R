@@ -7,7 +7,7 @@ library(rgl)
 
 qb_game_data = read.csv("../data/qb_game_data.csv")
 qb_salary = read.csv("../data/QB_Salary.csv")
-
+coach_data = read.csv("../data/all_coach_data.csv")
 qb_salary <- qb_salary |> 
   mutate(passer_player_name = paste0(substr(sub(" .*", "", Player), 1, 1), ".", sub(".* ", "", Player))) |> 
   select(passer_player_name, Avg..Year)
@@ -33,7 +33,7 @@ top_ten_paid_qbs <- qb_game_data |>
   filter(passer_player_name %in% ten_highest_paid_qbs_2024)
 
 qb_clean <- qb_game_data |> 
-    select(avg_year, passer_player_name, any_a, qb_epa, passer_rating, yards_after_catch, percent_pass_yds_from_yac, sacks_per_dropback, short_pass, percent_short_pass, team_rush_epa) |> 
+    select(avg_year, year, passer_player_name, any_a, qb_epa, passer_rating, yards_after_catch, percent_pass_yds_from_yac, sacks_per_dropback, short_pass, percent_short_pass, team_rush_epa) |> 
     mutate_if(is.numeric, ~ replace(., !is.finite(.), NA)) |> 
     mutate(avg_year = as.numeric((gsub(",","", sub(".", "", avg_year))))) |> 
     na.omit()
