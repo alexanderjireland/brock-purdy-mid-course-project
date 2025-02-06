@@ -54,7 +54,9 @@ function(input, output, session) {
   
   filtered_qb_comparison <- reactive({
     qb_comparison |> 
-      filter(passer_player_name >= input$min_games)
+      group_by(passer_player_name) |> 
+      filter(num_games >= input$min_games) |> 
+      ungroup()
   })
   
   filtered_qb_clean <- reactive({
@@ -63,23 +65,27 @@ function(input, output, session) {
   })
   
   filtered_qb_comparison_grouped <- reactive({
+    coached_qbs <- qb_clean |> 
+      filter(coach == input$coach) |> 
+      pull(passer_player_name)
     filtered_qb_comparison() |> 
-      mutate(group = case_when(
+      mutate(Group = case_when(
         passer_player_name == "B.Purdy" ~ "Brock Purdy",
         passer_player_name == input$qb_name ~ "Selected QB",
         passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top Paid QBs",
+        passer_player_name %in% coached_qbs ~ glue("{input$coach}'s QBs"),
         TRUE ~ "Other QBs"
       ))
   })
   
   output$plot_model_actual <- renderPlotly({
-    
+  
     dependent_var <- dependent_var_hashmap[input$dependent_var]
     
     p <- ggplot(data = filtered_qb_comparison_grouped(), aes(
       x=.data[[paste0("predicted_qb_", dependent_var)]], 
       y=.data[[paste0("actual_qb_", dependent_var)]], 
-      color = group,
+      color = Group,
       text = paste("QB:", passer_player_name, "<br>",
                    "Av. Salary per Year:", dollar(avg_salary_year))
     )) +
@@ -87,8 +93,9 @@ function(input, output, session) {
       xlab(glue("Predicted {input$dependent_var}")) +
       ylab(glue("Actual {input$dependent_var}")) +
       geom_abline(a=0, b=1, linetype = 'dashed') + 
-      geom_point(aes(alpha = .7), size = 1) +
-      scale_color_manual(values = c("Brock Purdy" = "red", "Selected QB" = "green", "Top Paid QBs" = "blue", "Other QBs" = 'grey')) +
+      geom_point(alpha = .7, size = 1) +
+      scale_color_manual(values = setNames(c("red", "springgreen4", "blue", "orange", "grey"),
+                                           c("Brock Purdy", "Selected QB", "Top Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))) +
       geom_text(data = filtered_qb_comparison_grouped() |> filter(passer_player_name %in% c("B.Purdy", input$qb_name)), 
                 aes(label = passer_player_name))
     

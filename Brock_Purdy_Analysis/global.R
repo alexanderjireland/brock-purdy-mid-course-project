@@ -12,7 +12,8 @@ qb_salary <- qb_salary |>
   mutate(passer_player_name = paste0(substr(sub(" .*", "", Player), 1, 1), ".", sub(".* ", "", Player))) |> 
   select(passer_player_name, Avg..Year)
 
-qb_game_data <- merge(qb_game_data, qb_salary)
+qb_game_data <- qb_game_data |> 
+  left_join(qb_salary)
 
 names(qb_game_data)[names(qb_game_data) == 'Avg..Year'] <- 'avg_year'
 names(qb_game_data)[names(qb_game_data) == 'posteam'] <- 'team'
@@ -54,8 +55,7 @@ top_ten_paid_qbs <- qb_game_data |>
 qb_clean <- qb_game_data |> 
     select(avg_year, coach, team, home_team, away_team, year, passer_player_name, any_a, qb_epa, passer_rating, yards_after_catch, percent_pass_yds_from_yac, sacks_per_dropback, short_pass, percent_short_pass, team_rush_epa) |> 
     mutate_if(is.numeric, ~ replace(., !is.finite(.), NA)) |> 
-    mutate(avg_year = as.numeric((gsub(",","", sub(".", "", avg_year))))) |> 
-    na.omit()
+    mutate(avg_year = as.numeric((gsub(",","", sub(".", "", avg_year)))))
 
 qb_clean_numeric_cols <- qb_clean |> 
   select(where(is.numeric)) |> 
@@ -100,13 +100,3 @@ max_games <- qb_clean |>
   summarize(num_games = n()) |> 
   summarize(max_games = max(num_games)) |> 
   pull(max_games)
-
-#ggplot(data = qb_comparison, aes(x=predicted_qb_epa, y=actual_qb_epa, color = passer_player_name == "B.Purdy")) +
-  #geom_abline(a=0, b=1) + 
-  #geom_point()
-#ggplot(data = qb_comparison, aes(x=predicted_qb_anya, y=actual_qb_anya, color = passer_player_name == "B.Purdy", alpha = .3)) +
-  #geom_abline(a=0, b=1) + 
-  #geom_point()
-#ggplot(data = qb_comparison, aes(x=predicted_qb_passer_rating, y=actual_qb_passer_rating, color = passer_player_name == "B.Purdy", alpha = .3)) +
-  #geom_abline(a=0, b=1) + 
-  #geom_point()
