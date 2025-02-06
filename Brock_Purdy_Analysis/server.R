@@ -20,7 +20,7 @@ function(input, output, session) {
   filtered_qbs_input <- reactive({
     qb_clean |> 
       group_by(passer_player_name) |> 
-      filter(n() >= input$min_games) |> 
+      filter(n() >= input$min_games & !(input$active_players & retired)) |> 
       ungroup() |> 
       distinct(passer_player_name) |> 
       pull(passer_player_name) |> 
@@ -104,7 +104,7 @@ function(input, output, session) {
                       ylim = c(min(qb_comparison[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE),
                                max(qb_comparison[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE))) +
       geom_text(data = filtered_qb_comparison_grouped() |> filter(passer_player_name %in% c("B.Purdy", input$qb_name)), 
-                aes(label = passer_player_name))
+                aes(label = passer_player_name), nudge_y = .05)
     
     ggplotly(p, tooltip = "text") 
   })
