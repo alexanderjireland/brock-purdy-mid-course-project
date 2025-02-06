@@ -72,7 +72,7 @@ function(input, output, session) {
       mutate(Group = case_when(
         passer_player_name == "B.Purdy" ~ "Brock Purdy",
         passer_player_name == input$qb_name ~ "Selected QB",
-        passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top Paid QBs",
+        passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
         passer_player_name %in% coached_qbs ~ glue("{input$coach}'s QBs"),
         TRUE ~ "Other QBs"
       ))
@@ -98,7 +98,7 @@ function(input, output, session) {
       geom_abline(a=0, b=1, linetype = 'dashed') + 
       geom_point(alpha = .7, size = 1) +
       scale_color_manual(values = setNames(c("red", "springgreen4", "blue", "orange", "grey"),
-                                           c("Brock Purdy", "Selected QB", "Top Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))) +
+                                           c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))) +
       coord_cartesian(xlim = c(min(qb_comparison[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE),
                                max(qb_comparison[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE)),
                       ylim = c(min(qb_comparison[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE),
