@@ -115,7 +115,18 @@ function(input, output, session) {
     
     # use plotly to create surface plot??
     
-    filtered_qb_data <- filtered_qb_clean()
+    coached_qbs <- qb_clean |> 
+      filter(coach == input$coach) |> 
+      pull(passer_player_name)
+    filtered_qb_data <- filtered_qb_clean() |> 
+      mutate(Group = case_when(
+        passer_player_name == "B.Purdy" ~ "Brock Purdy",
+        passer_player_name == input$qb_name ~ "Selected QB",
+        passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
+        passer_player_name %in% coached_qbs ~ glue("{input$coach}'s QBs"),
+        TRUE ~ "Other QBs"
+      ))
+    
     req(input$x_axis, input$y_axis , input$z_axis)
     rgl.open(useNULL = TRUE)
     
@@ -128,7 +139,9 @@ function(input, output, session) {
     z_range <- range(qb_clean[[input$z_axis]], na.rm = TRUE)
     
     bg3d(color = 'white')
-    qb_colors <- rainbow(length(unique(filtered_qb_data$passer_player_name)))[as.factor(filtered_qb_data$passer_player_name)]
+    col_values <- setNames(c("red", "springgreen4", "blue", "orange", "grey"),
+                                   c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))
+    qb_colors <- col_values[filtered_qb_data$Group]
     
     model <- lm(z ~ x + y, data = filtered_qb_data)
     x_seq <- seq(x_range[1], x_range[2], length.out = 20)
@@ -136,18 +149,19 @@ function(input, output, session) {
     grid <- expand.grid(x=x_seq, y=y_seq)
     grid$z <- predict(model, newdata = grid)
     
+    par3d(windowRect = c(100, 100, 900, 600))
     plot3d(x, y, z,
            col=qb_colors,
            type = 'p',
            size = 3,
+           alpha = .5,
            xlab = input$x_axis, ylab = input$y_axis, zlab = input$z_axis,
            xlim = x_range, ylim = y_range, zlim = z_range)
     
     surface3d(unique(grid$x), unique(grid$y), matrix(grid$z, nrow = 20),
               color = 'red', alpha = .5)
     
+    legend3d("topright", legend = names(col_values), col = col_values, pch = 16, cex = 1.2, inset = c(0, 0))
     rglwidget()
   })
 }
-
-
