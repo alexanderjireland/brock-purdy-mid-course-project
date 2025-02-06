@@ -141,7 +141,10 @@ function(input, output, session) {
     bg3d(color = 'white')
     col_values <- setNames(c("red", "springgreen4", "blue", "orange", "grey"),
                                    c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))
+    size_values <- setNames(c(3, 3, 1, 1, .8),
+                            c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))
     qb_colors <- col_values[filtered_qb_data$Group]
+    qb_sizes <- size_values[filtered_qb_data$Group]
     
     model <- lm(z ~ x + y, data = filtered_qb_data)
     x_seq <- seq(x_range[1], x_range[2], length.out = 20)
@@ -151,12 +154,13 @@ function(input, output, session) {
     
     par3d(windowRect = c(100, 100, 900, 600))
     plot3d(x, y, z,
-           col=qb_colors,
-           type = 'p',
-           size = 3,
-           alpha = .5,
+           type = 'n',
            xlab = input$x_axis, ylab = input$y_axis, zlab = input$z_axis,
            xlim = x_range, ylim = y_range, zlim = z_range)
+    spheres3d(x, y, z,
+              col = qb_colors,
+              radius = qb_sizes,
+              alpha = .8)
     
     surface3d(unique(grid$x), unique(grid$y), matrix(grid$z, nrow = 20),
               color = 'red', alpha = .5)
