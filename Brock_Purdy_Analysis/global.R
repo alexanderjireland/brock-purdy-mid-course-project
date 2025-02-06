@@ -15,6 +15,25 @@ qb_salary <- qb_salary |>
 qb_game_data <- merge(qb_game_data, qb_salary)
 
 names(qb_game_data)[names(qb_game_data) == 'Avg..Year'] <- 'avg_year'
+names(qb_game_data)[names(qb_game_data) == 'posteam'] <- 'team'
+
+qb_game_data <- qb_game_data |> 
+  mutate(team = str_replace_all(team, "\\bLA\\b", 'LAR'))
+merge_teamnames_map <- c("GNB" = "GB",
+                         "KAN" = "KC",
+                         "NOR" = "NO",
+                         "NWE" = "NE",
+                         "OAK" = "LV",
+                         "LVR" = "LV", 
+                         "SDG" = "LAC",
+                         "SFO" = "SF",
+                         "STL" = "LAR",
+                         "TAM" = "TB")
+coach_data$team <- ifelse(coach_data$team %in% names(merge_teamnames_map), merge_teamnames_map[coach_data$team], coach_data$team)
+
+qb_game_data <- qb_game_data |> 
+  merge(coach_data, by = c("year", "team")) |> 
+  select(-X.x, -X.y, -rush_epa)
 
 get_qb_data <- function (qb_name){
   qb_game_data |> 
