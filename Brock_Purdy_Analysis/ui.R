@@ -22,7 +22,9 @@ fluidPage(
       id = 'side-panel',
       sliderInput("year_range",
                   "Select Year",
-                  min = 1999, max = 2024, val = c(1999, 2024), step = 1),
+                  min = 1999, max = 2024, val = c(1999, 2024), step = 1,
+                  sep = "",
+                  animate = TRUE),
       
       selectInput("coach",
                   "Select Coach",

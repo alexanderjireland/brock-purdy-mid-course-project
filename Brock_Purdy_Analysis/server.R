@@ -105,7 +105,6 @@ function(input, output, session) {
   
   output$plot_model_actual <- renderPlotly({
     
-    qb_comparison <- qb_comparison()
     dependent_var <- dependent_var_hashmap[input$dependent_var]
     
     p <- ggplot(data = filtered_qb_comparison_grouped(), aes(
@@ -114,7 +113,8 @@ function(input, output, session) {
       color = Group,
       text = ifelse(!is.na(avg_salary_year),
                     paste("QB:", passer_player_name, "<br>",
-                          "APY Salary (2025):", dollar(avg_salary_year)),
+                          "APY Salary (2025):", dollar(avg_salary_year), "<br>",
+                          "Games played:", total_games_played[passer_player_name]),
                     paste("QB:", passer_player_name, "<br>",
                           "Retired")),
       customdata = passer_player_name
@@ -126,10 +126,10 @@ function(input, output, session) {
       geom_point(alpha = .7, size = 1) +
       scale_color_manual(values = setNames(c("red", "springgreen4", "blue", "orange", "grey"),
                                            c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))) +
-      coord_cartesian(xlim = c(min(qb_comparison[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE),
-                               max(qb_comparison[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE)),
-                      ylim = c(min(qb_comparison[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE),
-                               max(qb_comparison[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE))) +
+      coord_cartesian(xlim = c(min(qb_all_years_comp[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE),
+                               max(qb_all_years_comp[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE)),
+                      ylim = c(min(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE),
+                               max(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE))) +
       geom_text(data = filtered_qb_comparison_grouped() |> filter(passer_player_name %in% c("B.Purdy", input$qb_name)), 
                 aes(label = passer_player_name), nudge_y = .05)
     

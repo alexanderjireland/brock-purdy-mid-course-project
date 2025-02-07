@@ -91,6 +91,23 @@ qb_clean_numeric_col_names <- c("Average Salary per Year (in 2025)", "Year", "AN
 qb_clean_col_map <- setNames(qb_clean_numeric_cols,
                              qb_clean_numeric_col_names)
 
+qb_all_years_comp <- qb_clean |> 
+    group_by(passer_player_name) |> 
+    summarize(actual_qb_anya = mean(any_a),
+              predicted_qb_anya = mean(predicted_anya),
+              actual_qb_epa = mean(qb_epa),
+              predicted_qb_epa = mean(predicted_epa),
+              actual_qb_passer_rating = mean(passer_rating),
+              predicted_qb_passer_rating = mean(predicted_passer_rating),
+              num_games = n(),
+              avg_salary_year = mean(avg_year),
+              retired = first(retired))
+
+total_games_played_df <- qb_all_years_comp |> 
+  select(passer_name = passer_player_name, total_num_games = num_games)
+
+total_games_played <- setNames(total_games_played_df$total_num_games, total_games_played_df$passer_name)
+
 max_games <- qb_clean |> 
   group_by(passer_player_name) |> 
   summarize(num_games = n()) |> 
