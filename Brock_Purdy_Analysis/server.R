@@ -9,23 +9,65 @@
 
 library(shiny)
 
-get_quartiles <- function (col_name){
-  quantile(qb_game_data$col_name, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)
-}
-
 # Define server logic required to draw a histogram
 function(input, output, session) {
   
+  qb_comparison <- reactive({
+    qb_clean |> 
+    filter(year %in% input$year_range) |> 
+    group_by(passer_player_name) |> 
+    summarize(actual_qb_anya = mean(any_a),
+              predicted_qb_anya = mean(predicted_anya),
+              actual_qb_epa = mean(qb_epa),
+              predicted_qb_epa = mean(predicted_epa),
+              actual_qb_passer_rating = mean(passer_rating),
+              predicted_qb_passer_rating = mean(predicted_passer_rating),
+              num_games = n(),
+              avg_salary_year = mean(avg_year),
+              retired = first(retired))
+  })
   
   filtered_qbs_input <- reactive({
     qb_clean |> 
+      filter(year %in% seq(input$year_range[1], input$year_range[2], by = 1)) |> 
       group_by(passer_player_name) |> 
-      filter(n() >= input$min_games & !(input$active_players & retired)) |> 
+      filter(!(input$active_players & retired)) |> 
       ungroup() |> 
       distinct(passer_player_name) |> 
       pull(passer_player_name) |> 
       sort()
   })
+  
+  filtered_qb_comparison <- reactive({
+    qb_comparison() |> 
+      group_by(passer_player_name) |> 
+      filter(passer_player_name %in% filtered_qbs_input()) |> 
+      ungroup()
+  })
+  
+  filtered_qb_clean <- reactive({
+    qb_clean |> 
+      filter(passer_player_name %in% filtered_qbs_input())
+  })
+  
+  filtered_qb_comparison_grouped <- reactive({
+    coached_qbs <- qb_clean |> 
+      filter(coach == input$coach & year %in% seq(input$year_range[1], input$year_range[2], by = 1)) |> 
+      pull(passer_player_name)
+    filtered_qb_comparison() |> 
+      mutate(Group = case_when(
+        passer_player_name == "B.Purdy" ~ "Brock Purdy",
+        passer_player_name == input$qb_name ~ "Selected QB",
+        passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
+        passer_player_name %in% coached_qbs ~ glue("{input$coach}'s QBs"),
+        TRUE ~ "Other QBs"
+      ))
+  })
+  
+  
+  
+  
+  
   
   qb_initialized <- reactiveVal(FALSE)
   
@@ -45,41 +87,25 @@ function(input, output, session) {
     }
   })
   
+  output$stat_explanation <- renderText({
+    explanations <- list(
+      "ANY/A" = "Adjusted Net Yards per Attempt (ANY/A) factors in passing yards, touchdowns, interceptions, and sacks.",
+      "EPA" = "Expected Points Added (EPA) measures the impact of each play on the team's chances of scoring.",
+      "Passer Rating" = "Passer Rating is a traditional QB efficiency metric based on completions, yards, touchdowns, and interceptions."
+    )
+    explanations[[input$dependent_var]]
+  })
+  
   output$qb_error <- renderText({
     if (!is.null(input$qb_name) & !(input$qb_name %in% filtered_qbs_input())) {
-      return(glue("Selected QB '{input$qb_name}' has not played the required minimum number of games. Please select a different QB or lower the required minimum number of games played."))
+      return(glue("Selected QB '{input$qb_name}' did not play in the selected year(s)."))
     }
     return(NULL)
   })
   
-  filtered_qb_comparison <- reactive({
-    qb_comparison |> 
-      group_by(passer_player_name) |> 
-      filter(num_games >= input$min_games & !(input$active_players & retired)) |> 
-      ungroup()
-  })
-  
-  filtered_qb_clean <- reactive({
-    qb_clean |> 
-      filter(passer_player_name %in% filtered_qbs_input())
-  })
-  
-  filtered_qb_comparison_grouped <- reactive({
-    coached_qbs <- qb_clean |> 
-      filter(coach == input$coach) |> 
-      pull(passer_player_name)
-    filtered_qb_comparison() |> 
-      mutate(Group = case_when(
-        passer_player_name == "B.Purdy" ~ "Brock Purdy",
-        passer_player_name == input$qb_name ~ "Selected QB",
-        passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
-        passer_player_name %in% coached_qbs ~ glue("{input$coach}'s QBs"),
-        TRUE ~ "Other QBs"
-      ))
-  })
-  
   output$plot_model_actual <- renderPlotly({
     
+    qb_comparison <- qb_comparison()
     dependent_var <- dependent_var_hashmap[input$dependent_var]
     
     p <- ggplot(data = filtered_qb_comparison_grouped(), aes(
@@ -90,7 +116,8 @@ function(input, output, session) {
                     paste("QB:", passer_player_name, "<br>",
                           "APY Salary (2025):", dollar(avg_salary_year)),
                     paste("QB:", passer_player_name, "<br>",
-                          "Retired"))
+                          "Retired")),
+      customdata = passer_player_name
     )) +
       ggtitle(glue("Actual vs. Predicted {input$dependent_var}")) +
       xlab(glue("Predicted {input$dependent_var}")) +
@@ -106,9 +133,36 @@ function(input, output, session) {
       geom_text(data = filtered_qb_comparison_grouped() |> filter(passer_player_name %in% c("B.Purdy", input$qb_name)), 
                 aes(label = passer_player_name), nudge_y = .05)
     
-    ggplotly(p, tooltip = "text") 
+    
+    ggplotly(p, tooltip = "text") |> 
+      event_register("plotly_click")
   })
   
+  selected_qb <- reactiveVal(NULL)
+  
+  observeEvent(event_data("plotly_click"), {
+    event <- event_data("plotly_click")
+    if (!is.null(event)) {
+      selected_qb(event$customdata)
+    }
+  })
+  
+  output$qb_games_table <- renderDT({
+    req(selected_qb())
+    qb_games <- qb_clean |> 
+      filter(passer_player_name == selected_qb())
+    datatable(qb_games, 
+              caption = glue("{selected_qb()} Data Table"),
+              options = list(pageLength = 10),
+              selection = 'single')
+  })
+  
+  selected_game <- reactive({
+    req(selected_qb(), input$qb_games_table_rows_selected)
+    qb_game <- qb_clean |> filter(passer_player_name == selected_qb())
+    
+    qb_game[input$qb_games_table_rows_selected, ]
+  })
   
   output$multi_scatter_plot <- renderRglwidget({
     # https://rpubs.com/pjozefek/576206
@@ -122,27 +176,29 @@ function(input, output, session) {
       mutate(Group = case_when(
         passer_player_name == "B.Purdy" ~ "Brock Purdy",
         passer_player_name == input$qb_name ~ "Selected QB",
-        passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
         passer_player_name %in% coached_qbs ~ glue("{input$coach}'s QBs"),
         TRUE ~ "Other QBs"
       ))
     
     req(input$x_axis, input$y_axis , input$z_axis)
     rgl.open(useNULL = TRUE)
+    input_x = qb_clean_col_map[input$x_axis]
+    input_y = qb_clean_col_map[input$y_axis]
+    input_z = qb_clean_col_map[input$z_axis]
     
-    x <- filtered_qb_data[[input$x_axis]] 
-    y <- filtered_qb_data[[input$y_axis]]
-    z <- filtered_qb_data[[input$z_axis]]
+    x <- filtered_qb_data[[input_x]] 
+    y <- filtered_qb_data[[input_z]]
+    z <- filtered_qb_data[[input_y]]
     
-    x_range <- range(qb_clean[[input$x_axis]], na.rm = TRUE)
-    y_range <- range(qb_clean[[input$y_axis]], na.rm = TRUE)
-    z_range <- range(qb_clean[[input$z_axis]], na.rm = TRUE)
+    x_range <- range(qb_clean[[input_x]], na.rm = TRUE)
+    y_range <- range(qb_clean[[input_z]], na.rm = TRUE)
+    z_range <- range(qb_clean[[input_y]], na.rm = TRUE)
     
     bg3d(color = 'white')
-    col_values <- setNames(c("red", "springgreen4", "blue", "orange", "grey"),
-                                   c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))
+    col_values <- setNames(c("red", "springgreen4", "orange", "grey"),
+                           c("Brock Purdy", "Selected QB", glue("{input$coach}'s QBs"), "Other QBs"))
     size_values <- setNames(c(3, 3, 1, 1, .8),
-                            c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))
+                            c("Brock Purdy", "Selected QB", glue("{input$coach}'s QBs"), "Other QBs"))
     qb_colors <- col_values[filtered_qb_data$Group]
     qb_sizes <- size_values[filtered_qb_data$Group]
     
@@ -154,18 +210,21 @@ function(input, output, session) {
     
     par3d(windowRect = c(100, 100, 900, 600))
     plot3d(x, y, z,
-           type = 'n',
-           xlab = input$x_axis, ylab = input$y_axis, zlab = input$z_axis,
+           type = 'p',
+           col = qb_colors,
+           xlab = input$x_axis, ylab = input$z_axis, zlab = input$y_axis,
            xlim = x_range, ylim = y_range, zlim = z_range)
-    spheres3d(x, y, z,
-              col = qb_colors,
-              radius = qb_sizes,
-              alpha = .8)
+    
     
     surface3d(unique(grid$x), unique(grid$y), matrix(grid$z, nrow = 20),
-              color = 'red', alpha = .5)
+              color = 'grey', alpha = .5)
     
     legend3d("topright", legend = names(col_values), col = col_values, pch = 16, cex = 1.2, inset = c(0, 0))
+    view3d(theta = -30, phi = 30, fov = 0)
     rglwidget()
+  })
+  
+  observeEvent(input$reset_input, {
+    shinyjs::reset("side-panel")
   })
 }

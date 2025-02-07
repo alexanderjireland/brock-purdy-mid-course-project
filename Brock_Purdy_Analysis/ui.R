@@ -18,9 +18,11 @@ fluidPage(
   # Sidebar with inputs
   sidebarLayout(
     sidebarPanel(
-      sliderInput("min_games",
-                  "Minimum Number of Games Played",
-                  min = 10, max = 100, value = 10),
+      shinyjs::useShinyjs(),
+      id = 'side-panel',
+      sliderInput("year_range",
+                  "Select Year",
+                  min = 1999, max = 2024, val = c(1999, 2024), step = 1),
       
       selectInput("coach",
                   "Select Coach",
@@ -40,27 +42,37 @@ fluidPage(
                   selectize = TRUE),
       
       selectInput("dependent_var",
-                  "Select Dependent Variable",
+                  "Select Statistic",
                   choices = c("EPA", "ANY/A", "Passer Rating")),
       
-      textOutput('qb_error')
+      textOutput("stat_explanation"),
+      
+      textOutput('qb_error'),
+      
+      actionButton("reset_input", "Reset"),
+      
+      tags$hr()
     ),
     
     # Main panel with tabs for different plots
     mainPanel(
       tabsetPanel(
-        tabPanel("Model vs. Reality", plotlyOutput("plot_model_actual")),
+        tabPanel("Model vs. Reality", plotlyOutput("plot_model_actual"),
+                 DTOutput("qb_games_table")),
         
         tabPanel("3D Plot", 
                  selectInput('x_axis',
                              "Select x-axis",
-                             choices = qb_clean_numeric_cols),
+                             choices = qb_clean_numeric_col_names,
+                             selected = "Yards After Catch"),
                  selectInput('y_axis',
                              "Select y-axis",
-                             choices = qb_clean_numeric_cols),
+                             choices = qb_clean_numeric_col_names,
+                             selected = "Sacks per Dropback"),
                  selectInput('z_axis',
                              "Select z-axis",
-                             choices = qb_clean_numeric_cols),
+                             choices = qb_clean_numeric_col_names,
+                             selected = "EPA"),
                  rglwidgetOutput("multi_scatter_plot", width = 800, height = 600)
         )
       )

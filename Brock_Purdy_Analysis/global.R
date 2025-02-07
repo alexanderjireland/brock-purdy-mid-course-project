@@ -4,6 +4,7 @@ library(ggrepel)
 library(plotly)
 library(scales)
 library(rgl)
+library(DT)
 
 qb_game_data = read.csv("../data/qb_game_data.csv")
 qb_salary = read.csv("../data/QB_Salary.csv")
@@ -82,21 +83,13 @@ qb_clean <- qb_clean |>
          )
 
 
-qb_comparison <- qb_clean |> 
-  group_by(passer_player_name) |> 
-  summarize(actual_qb_anya = mean(any_a),
-         predicted_qb_anya = mean(predicted_anya),
-         actual_qb_epa = mean(qb_epa),
-         predicted_qb_epa = mean(predicted_epa),
-         actual_qb_passer_rating = mean(passer_rating),
-         predicted_qb_passer_rating = mean(predicted_passer_rating),
-         num_games = n(),
-         avg_salary_year = mean(avg_year),
-         retired = first(retired))
-
 keys <- c("EPA", "ANY/A", "Passer Rating")
 values <- c("epa", "anya", "passer_rating")
 dependent_var_hashmap <- setNames(values, keys)
+
+qb_clean_numeric_col_names <- c("Average Salary per Year (in 2025)", "Year", "ANY/A", "EPA", "Passer Rating", "Yards After Catch", "Proportion of Pass Yards from YAC", "Sacks per Dropback", "Number of Short Passes", "Proportion of All Passes that are Short", "Rushing EPA")
+qb_clean_col_map <- setNames(qb_clean_numeric_cols,
+                             qb_clean_numeric_col_names)
 
 max_games <- qb_clean |> 
   group_by(passer_player_name) |> 
