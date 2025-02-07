@@ -11,6 +11,11 @@ library(shiny)
 
 # Define UI for application
 fluidPage(
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
+  ),
+  
+  theme = shinytheme("flatly"),
   
   # Application title
   titlePanel("Brock Purdy Analysis"),
@@ -22,7 +27,7 @@ fluidPage(
       id = 'side-panel',
       sliderInput("year_range",
                   "Select Year",
-                  min = 1999, max = 2024, val = c(1999, 2024), step = 1,
+                  min = 1999, max = 2024, value = c(1999, 2024), step = 1,
                   sep = "",
                   animate = TRUE),
       

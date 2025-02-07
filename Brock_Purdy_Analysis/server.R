@@ -14,7 +14,7 @@ function(input, output, session) {
   
   qb_comparison <- reactive({
     qb_clean |> 
-    filter(year %in% input$year_range) |> 
+    filter(year %in% seq(input$year_range[1], input$year_range[2], step = 1)) |> 
     group_by(passer_player_name) |> 
     summarize(actual_qb_anya = mean(any_a),
               predicted_qb_anya = mean(predicted_anya),
@@ -31,7 +31,7 @@ function(input, output, session) {
     qb_clean |> 
       filter(year %in% seq(input$year_range[1], input$year_range[2], by = 1)) |> 
       group_by(passer_player_name) |> 
-      filter(!(input$active_players & retired)) |> 
+      filter(if (input$active_players) retired == FALSE else TRUE) |> 
       ungroup() |> 
       distinct(passer_player_name) |> 
       pull(passer_player_name) |> 

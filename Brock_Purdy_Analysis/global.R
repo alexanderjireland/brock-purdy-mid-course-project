@@ -5,6 +5,7 @@ library(plotly)
 library(scales)
 library(rgl)
 library(DT)
+library(shinythemes)
 
 qb_game_data = read.csv("../data/qb_game_data.csv")
 qb_salary = read.csv("../data/QB_Salary.csv")
@@ -20,8 +21,9 @@ names(qb_game_data)[names(qb_game_data) == 'Avg..Year'] <- 'avg_year'
 names(qb_game_data)[names(qb_game_data) == 'posteam'] <- 'team'
 
 qb_game_data <- qb_game_data |> 
-  mutate(team = str_replace_all(team, "\\bLA\\b", 'LAR'),
-         retired = is.na(avg_year))
+  mutate(team = str_replace_all(team, "\\bLA\\b", 'LAR')) |> 
+  group_by(passer_player_name) |> 
+  mutate(retired = if_else(any(year == 2024), FALSE, TRUE))
 
 merge_teamnames_map <- c("GNB" = "GB",
                          "KAN" = "KC",
