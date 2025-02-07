@@ -114,9 +114,14 @@ function(input, output, session) {
       text = ifelse(!is.na(avg_salary_year),
                     paste("QB:", passer_player_name, "<br>",
                           "APY Salary (2025):", dollar(avg_salary_year), "<br>",
-                          "Games played:", total_games_played[passer_player_name]),
+                          "Games played:", total_games_played[passer_player_name], "<br>",
+                          glue("Predicted {input$dependent_var}"), round(.data[[paste0("predicted_qb_", dependent_var)]], digits = 4), "<br>",
+                          glue("Acctual {input$dependent_var}"), round(.data[[paste0("actual_qb_", dependent_var)]], digits = 4)),
                     paste("QB:", passer_player_name, "<br>",
-                          "Retired")),
+                          "Retired", "<br>",
+                          "Games played:", total_games_played[passer_player_name], "<br>",
+                          glue("Predicted {input$dependent_var}"), round(.data[[paste0("predicted_qb_", dependent_var)]], digits = 4), "<br>",
+                          glue("Acctual {input$dependent_var}"), round(.data[[paste0("actual_qb_", dependent_var)]], digits = 4))),
       customdata = passer_player_name
     )) +
       ggtitle(glue("Actual vs. Predicted {input$dependent_var}")) +
