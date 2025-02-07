@@ -14,17 +14,17 @@ function(input, output, session) {
   
   qb_comparison <- reactive({
     qb_clean |> 
-    filter(year %in% seq(input$year_range[1], input$year_range[2], step = 1)) |> 
-    group_by(passer_player_name) |> 
-    summarize(actual_qb_anya = mean(any_a),
-              predicted_qb_anya = mean(predicted_anya),
-              actual_qb_epa = mean(qb_epa),
-              predicted_qb_epa = mean(predicted_epa),
-              actual_qb_passer_rating = mean(passer_rating),
-              predicted_qb_passer_rating = mean(predicted_passer_rating),
-              num_games = n(),
-              avg_salary_year = mean(avg_year),
-              retired = first(retired))
+      filter(year %in% seq(input$year_range[1], input$year_range[2], step = 1)) |> 
+      group_by(passer_player_name) |> 
+      summarize(actual_qb_anya = mean(any_a),
+                predicted_qb_anya = mean(predicted_anya),
+                actual_qb_epa = mean(qb_epa),
+                predicted_qb_epa = mean(predicted_epa),
+                actual_qb_passer_rating = mean(passer_rating),
+                predicted_qb_passer_rating = mean(predicted_passer_rating),
+                num_games = n(),
+                avg_salary_year = mean(avg_year),
+                retired = first(retired))
   })
   
   filtered_qbs_input <- reactive({
@@ -107,37 +107,69 @@ function(input, output, session) {
     
     dependent_var <- dependent_var_hashmap[input$dependent_var]
     
-    p <- ggplot(data = filtered_qb_comparison_grouped(), aes(
-      x=.data[[paste0("predicted_qb_", dependent_var)]], 
-      y=.data[[paste0("actual_qb_", dependent_var)]], 
-      color = Group,
-      text = ifelse(!is.na(avg_salary_year),
-                    paste("QB:", passer_player_name, "<br>",
-                          "APY Salary (2025):", dollar(avg_salary_year), "<br>",
-                          "Games played:", total_games_played[passer_player_name], "<br>",
-                          glue("Predicted {input$dependent_var}"), round(.data[[paste0("predicted_qb_", dependent_var)]], digits = 4), "<br>",
-                          glue("Acctual {input$dependent_var}"), round(.data[[paste0("actual_qb_", dependent_var)]], digits = 4)),
-                    paste("QB:", passer_player_name, "<br>",
-                          "Retired", "<br>",
-                          "Games played:", total_games_played[passer_player_name], "<br>",
-                          glue("Predicted {input$dependent_var}"), round(.data[[paste0("predicted_qb_", dependent_var)]], digits = 4), "<br>",
-                          glue("Acctual {input$dependent_var}"), round(.data[[paste0("actual_qb_", dependent_var)]], digits = 4))),
-      customdata = passer_player_name
-    )) +
-      ggtitle(glue("Actual vs. Predicted {input$dependent_var}")) +
-      xlab(glue("Predicted {input$dependent_var}")) +
-      ylab(glue("Actual {input$dependent_var}")) +
-      geom_abline(a=0, b=1, linetype = 'dashed') + 
-      geom_point(alpha = .7, size = 1) +
-      scale_color_manual(values = setNames(c("red", "springgreen4", "blue", "orange", "grey"),
-                                           c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))) +
-      coord_cartesian(xlim = c(min(qb_all_years_comp[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE),
-                               max(qb_all_years_comp[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE)),
-                      ylim = c(min(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE),
-                               max(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE))) +
-      geom_text(data = filtered_qb_comparison_grouped() |> filter(passer_player_name %in% c("B.Purdy", input$qb_name)), 
-                aes(label = passer_player_name), nudge_y = .05)
-    
+    if (input$average_cluster){
+      clustered_data <- filtered_qb_comparison_grouped() |> 
+        group_by(Group) |> 
+        summarize(predicted_qb_epa = mean(predicted_qb_epa),
+                  actual_qb_epa = mean(actual_qb_epa),
+                  predicted_qb_anya = mean(predicted_qb_anya),
+                  actual_qb_anya = mean(actual_qb_anya),
+                  predicted_qb_passer_rating = mean(predicted_qb_passer_rating),
+                  actual_qb_passer_rating = mean(actual_qb_passer_rating))
+      p <- ggplot(data = clustered_data, aes(
+        x=.data[[paste0("predicted_qb_", dependent_var)]], 
+        y=.data[[paste0("actual_qb_", dependent_var)]], 
+        color = Group,
+        text = paste(glue("Average of {Group}"), "<br>",
+                     glue("Predicted {input$dependent_var}"), round(.data[[paste0("predicted_qb_", dependent_var)]], digits = 4), "<br>",
+                     glue("Actual {input$dependent_var}:"), round(.data[[paste0("actual_qb_", dependent_var)]], digits = 4)
+        ))) +
+        ggtitle(glue("Actual vs. Predicted {input$dependent_var}")) +
+        xlab(glue("Predicted {input$dependent_var}")) +
+        ylab(glue("Actual {input$dependent_var}")) +
+        geom_abline(a=0, b=1, linetype = 'dashed') + 
+        geom_point(alpha = .7, size = 1) +
+        scale_color_manual(values = setNames(c("red", "springgreen4", "blue", "orange", "grey"),
+                                             c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))) +
+        coord_cartesian(xlim = c(min(qb_all_years_comp[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE),
+                                 max(qb_all_years_comp[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE)),
+                        ylim = c(min(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE),
+                                 max(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE))) +
+        geom_text(data = filtered_qb_comparison_grouped() |> filter(passer_player_name %in% c("B.Purdy", input$qb_name)), 
+                  aes(label = passer_player_name), nudge_y = .05)
+    }
+    else {
+      p <- ggplot(data = filtered_qb_comparison_grouped(), aes(
+        x=.data[[paste0("predicted_qb_", dependent_var)]], 
+        y=.data[[paste0("actual_qb_", dependent_var)]], 
+        color = Group,
+        text = ifelse(!is.na(avg_salary_year),
+                      paste("QB:", passer_player_name, "<br>",
+                            "APY Salary (2025):", dollar(avg_salary_year), "<br>",
+                            "Games played:", total_games_played[passer_player_name], "<br>",
+                            glue("Predicted {input$dependent_var}:"), round(.data[[paste0("predicted_qb_", dependent_var)]], digits = 4), "<br>",
+                            glue("Actual {input$dependent_var}:"), round(.data[[paste0("actual_qb_", dependent_var)]], digits = 4)),
+                      paste("QB:", passer_player_name, "<br>",
+                            "Retired", "<br>",
+                            "Games played:", total_games_played[passer_player_name], "<br>",
+                            glue("Predicted {input$dependent_var}:"), round(.data[[paste0("predicted_qb_", dependent_var)]], digits = 4), "<br>",
+                            glue("Actual {input$dependent_var}:"), round(.data[[paste0("actual_qb_", dependent_var)]], digits = 4))),
+        customdata = passer_player_name
+      )) +
+        ggtitle(glue("Actual vs. Predicted {input$dependent_var}")) +
+        xlab(glue("Predicted {input$dependent_var}")) +
+        ylab(glue("Actual {input$dependent_var}")) +
+        geom_abline(a=0, b=1, linetype = 'dashed') + 
+        geom_point(alpha = .7, size = 1) +
+        scale_color_manual(values = setNames(c("red", "springgreen4", "blue", "orange", "grey"),
+                                             c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))) +
+        coord_cartesian(xlim = c(min(qb_all_years_comp[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE),
+                                 max(qb_all_years_comp[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE)),
+                        ylim = c(min(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE),
+                                 max(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE))) +
+        geom_text(data = filtered_qb_comparison_grouped() |> filter(passer_player_name %in% c("B.Purdy", input$qb_name)), 
+                  aes(label = passer_player_name), nudge_y = .05)
+    }
     
     ggplotly(p, tooltip = "text") |> 
       event_register("plotly_click")

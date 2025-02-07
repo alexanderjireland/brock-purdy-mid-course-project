@@ -48,6 +48,10 @@ fluidPage(
                   multiple = FALSE,
                   selectize = TRUE),
       
+      checkboxInput("average_cluster",
+                    "Average of each Cluster",
+                    FALSE),
+      
       selectInput("dependent_var",
                   "Select Statistic",
                   choices = c("EPA", "ANY/A", "Passer Rating")),
