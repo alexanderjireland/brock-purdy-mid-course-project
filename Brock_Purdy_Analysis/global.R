@@ -39,7 +39,7 @@ coach_data$team <- ifelse(coach_data$team %in% names(merge_teamnames_map), merge
 
 qb_game_data <- qb_game_data |> 
   merge(coach_data, by = c("year", "team")) |> 
-  select(-X.x, -X.y, -rush_epa)
+  select(-X.x, -X.y)
 
 get_qb_data <- function (qb_name){
   qb_game_data |> 
@@ -58,9 +58,10 @@ top_ten_paid_qbs <- qb_game_data |>
   filter(passer_player_name %in% ten_highest_paid_qbs_2024)
 
 qb_clean <- qb_game_data |> 
-    select(avg_year, coach, team, home_team, away_team, year, passer_player_name, any_a, qb_epa, passer_rating, yards_after_catch, percent_pass_yds_from_yac, sacks_per_dropback, short_pass, percent_short_pass, team_rush_epa, retired) |> 
+    select(avg_year, coach, team, home_team, away_team, year, passer_player_name, any_a, qb_epa, passer_rating, yards_after_catch, percent_pass_yds_from_yac, sacks_per_dropback, short_pass, percent_short_pass, team_rush_epa, total_rush_yds, retired) |> 
     mutate_if(is.numeric, ~ replace(., !is.finite(.), NA)) |> 
-    mutate(avg_year = as.numeric((gsub(",","", sub(".", "", avg_year)))))
+    mutate(avg_year = as.numeric((gsub(",","", sub(".", "", avg_year))))) |> 
+    filter(percent_pass_yds_from_yac <= 1 & percent_pass_yds_from_yac >= 0)
 
 qb_clean_numeric_cols <- qb_clean |> 
   select(where(is.numeric)) |> 
@@ -68,10 +69,10 @@ qb_clean_numeric_cols <- qb_clean |>
 
 create_dependent_var_model <- function (dependent_var) {
   if (dependent_var == 'passer_rating') {
-    lm(as.formula(glue("{dependent_var} ~ yards_after_catch + percent_pass_yds_from_yac + sacks_per_dropback + short_pass + percent_short_pass + team_rush_epa")), data = qb_clean)
+    lm(as.formula(glue("{dependent_var} ~ yards_after_catch + percent_pass_yds_from_yac + sacks_per_dropback + short_pass + percent_short_pass + team_rush_epa + total_rush_yds")), data = qb_clean)
   }
   else {
-    lm(as.formula(glue("{dependent_var} ~ yards_after_catch + percent_pass_yds_from_yac + sacks_per_dropback + short_pass + percent_short_pass")), data = qb_clean)
+    lm(as.formula(glue("{dependent_var} ~ yards_after_catch + percent_pass_yds_from_yac + sacks_per_dropback + short_pass + percent_short_pass + total_rush_yds")), data = qb_clean)
   }
 }
 
@@ -89,7 +90,7 @@ keys <- c("EPA", "ANY/A", "Passer Rating")
 values <- c("epa", "anya", "passer_rating")
 dependent_var_hashmap <- setNames(values, keys)
 
-qb_clean_numeric_col_names <- c("Average Salary per Year (in 2025)", "Year", "ANY/A", "EPA", "Passer Rating", "Yards After Catch", "Proportion of Pass Yards from YAC", "Sacks per Dropback", "Number of Short Passes", "Proportion of All Passes that are Short", "Rushing EPA")
+qb_clean_numeric_col_names <- c("Average Salary per Year (in 2025)", "Year", "ANY/A", "EPA", "Passer Rating", "Yards After Catch", "Proportion of Pass Yards from YAC", "Sacks per Dropback", "Number of Short Passes", "Proportion of All Passes that are Short", "Rushing EPA", "Total Rush Yards")
 qb_clean_col_map <- setNames(qb_clean_numeric_cols,
                              qb_clean_numeric_col_names)
 
@@ -115,3 +116,12 @@ max_games <- qb_clean |>
   summarize(num_games = n()) |> 
   summarize(max_games = max(num_games)) |> 
   pull(max_games)
+
+compute_confidence_interval <- function(vals, confidence = .95) {
+  n <- length(vals)
+  mean_vals <- mean(vals)
+  t_critical <- qt((1 + confidence) / 2, df = n - 1)
+  lower <- mean_vals - t_critical * (sd(vals) / sqrt(n))
+  upper <- mean_vals + t_critical * (sd(vals) / sqrt(n))
+  return(c(mean = mean_vals, lower = lower, upper = upper))
+}

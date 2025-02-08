@@ -107,6 +107,15 @@ function(input, output, session) {
     
     dependent_var <- dependent_var_hashmap[input$dependent_var]
     
+    x_vals = filtered_qb_comparison_grouped()[[paste0("predicted_qb_", dependent_var)]]
+    y_vals = filtered_qb_comparison_grouped()[[paste0("actual_qb_", dependent_var)]]
+    
+    confidence_vals_x <- compute_confidence_interval(x_vals)
+    print(confidence_vals_x)
+    confidence_vals_y <- compute_confidence_interval(y_vals)
+    print(confidence_vals_y)
+
+    
     if (input$average_cluster){
       clustered_data <- filtered_qb_comparison_grouped() |> 
         group_by(Group) |> 
@@ -117,8 +126,8 @@ function(input, output, session) {
                   predicted_qb_passer_rating = mean(predicted_qb_passer_rating),
                   actual_qb_passer_rating = mean(actual_qb_passer_rating))
       p <- ggplot(data = clustered_data, aes(
-        x=.data[[paste0("predicted_qb_", dependent_var)]], 
-        y=.data[[paste0("actual_qb_", dependent_var)]], 
+        x=.data[[paste0("predicted_qb_", dependent_var)]],
+        y=.data[[paste0("actual_qb_", dependent_var)]],
         color = Group,
         text = paste(glue("Average of {Group}"), "<br>",
                      glue("Predicted {input$dependent_var}"), round(.data[[paste0("predicted_qb_", dependent_var)]], digits = 4), "<br>",
@@ -136,22 +145,25 @@ function(input, output, session) {
                         ylim = c(min(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE),
                                  max(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE))) +
         geom_text(data = filtered_qb_comparison_grouped() |> filter(passer_player_name %in% c("B.Purdy", input$qb_name)), 
-                  aes(label = passer_player_name), nudge_y = .05)
+                  aes(label = passer_player_name), nudge_y = .05) +
+        geom_errorbar(aes(ymin = confidence_vals_y[2], ymax = confidence_vals_y[3])) +
+        geom_errorbarh(aes(xmin = confidence_vals_x[2], xmax = confidence_vals_x[3]))
+        
     }
     else {
       p <- ggplot(data = filtered_qb_comparison_grouped(), aes(
-        x=.data[[paste0("predicted_qb_", dependent_var)]], 
-        y=.data[[paste0("actual_qb_", dependent_var)]], 
+        x=.data[[paste0("predicted_qb_", dependent_var)]],
+        y=.data[[paste0("actual_qb_", dependent_var)]],
         color = Group,
         text = ifelse(!is.na(avg_salary_year),
                       paste("QB:", passer_player_name, "<br>",
                             "APY Salary (2025):", dollar(avg_salary_year), "<br>",
-                            "Games played:", total_games_played[passer_player_name], "<br>",
+                            glue("Games played since 1999:"), total_games_played[passer_player_name], "<br>", # try to add ability to count num games played since year in year_range selector
                             glue("Predicted {input$dependent_var}:"), round(.data[[paste0("predicted_qb_", dependent_var)]], digits = 4), "<br>",
                             glue("Actual {input$dependent_var}:"), round(.data[[paste0("actual_qb_", dependent_var)]], digits = 4)),
                       paste("QB:", passer_player_name, "<br>",
                             "Retired", "<br>",
-                            "Games played:", total_games_played[passer_player_name], "<br>",
+                            "Games played since 1999:", total_games_played[passer_player_name], "<br>",
                             glue("Predicted {input$dependent_var}:"), round(.data[[paste0("predicted_qb_", dependent_var)]], digits = 4), "<br>",
                             glue("Actual {input$dependent_var}:"), round(.data[[paste0("actual_qb_", dependent_var)]], digits = 4))),
         customdata = passer_player_name
@@ -171,8 +183,7 @@ function(input, output, session) {
                   aes(label = passer_player_name), nudge_y = .05)
     }
     
-    ggplotly(p, tooltip = "text") |> 
-      event_register("plotly_click")
+    ggplotly(p, tooltip = "text")
   })
   
   selected_qb <- reactiveVal(NULL)
