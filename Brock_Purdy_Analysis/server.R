@@ -109,6 +109,29 @@ function(input, output, session) {
     return(NULL)
   })
   
+  
+  output$boxplot <- renderPlotly({
+    dependent_var <- dependent_var_hashmap[input$dependent_var]
+    
+    print(filtered_qb_comparison_grouped())
+    p <- ggplot(data = filtered_qb_comparison_grouped() |> mutate(Group = factor(Group, levels = c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))),
+           aes(x = Group, y = .data[[paste0("actual_qb_", dependent_var)]]))+
+      ylab(input$dependent_var) +
+      xlab("Quarterback Group") +
+      geom_boxplot(aes(fill = Group), width = .6, alpha = .7) + 
+      geom_jitter(aes(color = Group,
+                  text = paste0("QB: ", passer_player_name, "<br>",
+                               "Average ", input$dependent_var, ": ", round(.data[[paste0("actual_qb_", dependent_var)]], 2))),
+                  width = .2, alpha = .6, size = .2) + 
+      ggtitle(glue("Boxplot of Average {input$dependent_var}")) +
+      theme_minimal(base_size = 14) +
+      theme(
+        axis.text.x = element_text(angle = 15, hjust = 1, size = 12)
+      )
+    
+    ggplotly(p, tooltip = "text") |> 
+      layout(height = 700)
+  })
   output$plot_model_actual <- renderPlotly({
     
     dependent_var <- dependent_var_hashmap[input$dependent_var]

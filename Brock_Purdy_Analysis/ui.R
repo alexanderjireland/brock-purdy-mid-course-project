@@ -57,7 +57,7 @@ fluidPage(
                   choices = c("EPA", "ANY/A", "Passer Rating")),
       
      sliderInput("max_rush_yds",
-                 "Games With Rushing Yards Fewer Than:",
+                 "Games With Rushing Yards Between:",
                  min = 0, max = 250, value = c(0, 250), step = 10,
                  animate = TRUE),
       
@@ -73,6 +73,7 @@ fluidPage(
     # Main panel with tabs for different plots
     mainPanel(
       tabsetPanel(
+        tabPanel("Brock's Stats", plotlyOutput("boxplot")),
         tabPanel("Model vs. Reality", plotlyOutput("plot_model_actual"),
                  DTOutput("qb_games_table")),
         
