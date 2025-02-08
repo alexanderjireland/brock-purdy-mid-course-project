@@ -119,12 +119,35 @@ function(input, output, session) {
     if (input$average_cluster){
       clustered_data <- filtered_qb_comparison_grouped() |> 
         group_by(Group) |> 
-        summarize(predicted_qb_epa = mean(predicted_qb_epa),
-                  actual_qb_epa = mean(actual_qb_epa),
+        summarize(pred_epa_low = compute_confidence_interval(.data[['predicted_qb_epa']])[2],
+                  pred_epa_high = compute_confidence_interval(.data[['predicted_qb_epa']])[3],
+                  predicted_qb_epa = compute_confidence_interval(.data[['predicted_qb_epa']])[1],
+                  
+                  actual_epa_low = compute_confidence_interval(.data[['actual_qb_epa']])[2],
+                  actual_epa_high = compute_confidence_interval(.data[['actual_qb_epa']])[3],
+                  actual_qb_epa = compute_confidence_interval(.data[['actual_qb_epa']])[1],
+                  
+                  pred_anya_low = compute_confidence_interval(.data[['predicted_qb_anya']])[2],
+                  pred_anya_high = compute_confidence_interval(.data[['predicted_qb_anya']])[3],
                   predicted_qb_anya = mean(predicted_qb_anya),
+                  
+                  actual_anya_low = compute_confidence_interval(.data[['actual_qb_anya']])[2],
+                  actual_anya_high = compute_confidence_interval(.data[['actual_qb_anya']])[3],
                   actual_qb_anya = mean(actual_qb_anya),
+                  
+                  pred_passer_rating_low = compute_confidence_interval(.data[['predicted_qb_passer_rating']])[2],
+                  pred_passer_rating_high = compute_confidence_interval(.data[['predicted_qb_passer_rating']])[3],
                   predicted_qb_passer_rating = mean(predicted_qb_passer_rating),
-                  actual_qb_passer_rating = mean(actual_qb_passer_rating))
+                  
+                  actual_passer_rating_low = compute_confidence_interval(.data[['actual_qb_passer_rating']])[2],
+                  actual_passer_rating_high = compute_confidence_interval(.data[['actual_qb_passer_rating']])[3],
+                  actual_qb_passer_rating = mean(actual_qb_passer_rating)
+                  )
+      pred_low <- clustered_data[[paste0("pred_", dependent_var, "_low")]]
+      pred_high <- clustered_data[[paste0("pred_", dependent_var, "_high")]]
+      actual_low <- clustered_data[[paste0("actual_", dependent_var, "_low")]]
+      actual_high <- clustered_data[[paste0("actual_", dependent_var, "_high")]]
+      
       p <- ggplot(data = clustered_data, aes(
         x=.data[[paste0("predicted_qb_", dependent_var)]],
         y=.data[[paste0("actual_qb_", dependent_var)]],
@@ -138,6 +161,8 @@ function(input, output, session) {
         ylab(glue("Actual {input$dependent_var}")) +
         geom_abline(a=0, b=1, linetype = 'dashed') + 
         geom_point(alpha = .7, size = 1) +
+        geom_errorbar(aes(ymin = actual_low, ymax = actual_high)) +
+        geom_errorbarh(aes(xmin = pred_low, xmax = pred_high)) +
         scale_color_manual(values = setNames(c("red", "springgreen4", "blue", "orange", "grey"),
                                              c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))) +
         coord_cartesian(xlim = c(min(qb_all_years_comp[[paste0("predicted_qb_", dependent_var)]], na.rm = TRUE),
@@ -145,9 +170,9 @@ function(input, output, session) {
                         ylim = c(min(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE),
                                  max(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE))) +
         geom_text(data = filtered_qb_comparison_grouped() |> filter(passer_player_name %in% c("B.Purdy", input$qb_name)), 
-                  aes(label = passer_player_name), nudge_y = .05) +
-        geom_errorbar(aes(ymin = confidence_vals_y[2], ymax = confidence_vals_y[3])) +
-        geom_errorbarh(aes(xmin = confidence_vals_x[2], xmax = confidence_vals_x[3]))
+                  aes(label = passer_player_name), nudge_y = .05)
+        
+        
         
     }
     else {
