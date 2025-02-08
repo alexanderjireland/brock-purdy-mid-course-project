@@ -15,7 +15,7 @@ function(input, output, session) {
   qb_comparison <- reactive({
     qb_clean |> 
       filter(year %in% seq(input$year_range[1], input$year_range[2], step = 1),
-             total_rush_yds <= input$max_rush_yds) |> 
+             total_rush_yds <= input$max_rush_yds[2] & total_rush_yds >= input$max_rush_yds[1]) |> 
       group_by(passer_player_name) |> 
       summarize(actual_qb_anya = mean(any_a),
                 predicted_qb_anya = mean(predicted_anya),
@@ -31,7 +31,7 @@ function(input, output, session) {
   filtered_qbs_input <- reactive({
     qb_clean |> 
       filter(year %in% seq(input$year_range[1], input$year_range[2], by = 1),
-             total_rush_yds <= input$max_rush_yds) |> 
+             total_rush_yds <= input$max_rush_yds[2] & total_rush_yds >= input$max_rush_yds[1]) |> 
       group_by(passer_player_name) |> 
       filter(if (input$active_players) retired == FALSE else TRUE) |> 
       ungroup() |> 
@@ -50,13 +50,13 @@ function(input, output, session) {
   filtered_qb_clean <- reactive({
     qb_clean |> 
       filter(passer_player_name %in% filtered_qbs_input(),
-             total_rush_yds <= input$max_rush_yds)
+             total_rush_yds <= input$max_rush_yds[2] & total_rush_yds >= input$max_rush_yds[1])
   })
   
   filtered_qb_comparison_grouped <- reactive({
     coached_qbs <- qb_clean |> 
       filter(coach == input$coach & year %in% seq(input$year_range[1], input$year_range[2], by = 1),
-             total_rush_yds <= input$max_rush_yds) |> 
+             total_rush_yds <= input$max_rush_yds[2] & total_rush_yds >= input$max_rush_yds[1]) |> 
       pull(passer_player_name)
     filtered_qb_comparison() |> 
       mutate(coached_group = if_else(passer_player_name %in% coached_qbs,
