@@ -56,6 +56,11 @@ fluidPage(
                   "Select Statistic",
                   choices = c("EPA", "ANY/A", "Passer Rating")),
       
+     sliderInput("max_rush_yds",
+                 "Games With Rushing Yards Fewer Than:",
+                 min = 0, max = 250, value = 250, step = 10,
+                 animate = TRUE),
+      
       textOutput("stat_explanation"),
       
       textOutput('qb_error'),

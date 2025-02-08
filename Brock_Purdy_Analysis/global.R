@@ -58,22 +58,17 @@ top_ten_paid_qbs <- qb_game_data |>
   filter(passer_player_name %in% ten_highest_paid_qbs_2024)
 
 qb_clean <- qb_game_data |> 
-    select(avg_year, coach, team, home_team, away_team, year, passer_player_name, any_a, qb_epa, passer_rating, yards_after_catch, percent_pass_yds_from_yac, sacks_per_dropback, short_pass, percent_short_pass, team_rush_epa, total_rush_yds, retired, win) |> 
-    mutate_if(is.numeric, ~ replace(., !is.finite(.), NA)) |> 
-    mutate(avg_year = as.numeric((gsub(",","", sub(".", "", avg_year))))) |> 
-    filter(percent_pass_yds_from_yac <= 1 & percent_pass_yds_from_yac >= 0)
+  select(avg_year, coach, team, home_team, away_team, year, passer_player_name, any_a, qb_epa, passer_rating, yards_after_catch, percent_pass_yds_from_yac, sacks_per_dropback, short_pass, percent_short_pass, team_rush_epa, total_rush_yds, retired, win) |> 
+  mutate_if(is.numeric, ~ replace(., !is.finite(.), NA)) |> 
+  mutate(avg_year = as.numeric((gsub(",","", sub(".", "", avg_year))))) |> 
+  filter(percent_pass_yds_from_yac <= 1 & percent_pass_yds_from_yac >= 0)
 
 qb_clean_numeric_cols <- qb_clean |> 
   select(where(is.numeric)) |> 
   names()
 
 create_dependent_var_model <- function (dependent_var) {
-  if (dependent_var == 'passer_rating') {
-    lm(as.formula(glue("{dependent_var} ~ yards_after_catch + percent_pass_yds_from_yac + sacks_per_dropback + short_pass + percent_short_pass + team_rush_epa + total_rush_yds")), data = qb_clean)
-  }
-  else {
-    lm(as.formula(glue("{dependent_var} ~ yards_after_catch + percent_pass_yds_from_yac + sacks_per_dropback + short_pass + percent_short_pass + total_rush_yds")), data = qb_clean)
-  }
+  lm(as.formula(glue("{dependent_var} ~ yards_after_catch + percent_pass_yds_from_yac + sacks_per_dropback + short_pass + percent_short_pass + total_rush_yds")), data = qb_clean)
 }
 
 anya_model <- create_dependent_var_model('any_a')
@@ -83,7 +78,7 @@ qb_clean <- qb_clean |>
   mutate(predicted_anya = predict(anya_model, newdata = qb_clean),
          predicted_epa = predict(epa_model, newdata = qb_clean),
          predicted_passer_rating = predict(pr_model, newdata = qb_clean)
-         )
+  )
 
 
 keys <- c("EPA", "ANY/A", "Passer Rating")
@@ -95,16 +90,16 @@ qb_clean_col_map <- setNames(qb_clean_numeric_cols,
                              qb_clean_numeric_col_names)
 
 qb_all_years_comp <- qb_clean |> 
-    group_by(passer_player_name) |> 
-    summarize(actual_qb_anya = mean(any_a),
-              predicted_qb_anya = mean(predicted_anya),
-              actual_qb_epa = mean(qb_epa),
-              predicted_qb_epa = mean(predicted_epa),
-              actual_qb_passer_rating = mean(passer_rating),
-              predicted_qb_passer_rating = mean(predicted_passer_rating),
-              num_games = n(),
-              avg_salary_year = mean(avg_year),
-              retired = first(retired))
+  group_by(passer_player_name) |> 
+  summarize(actual_qb_anya = mean(any_a),
+            predicted_qb_anya = mean(predicted_anya),
+            actual_qb_epa = mean(qb_epa),
+            predicted_qb_epa = mean(predicted_epa),
+            actual_qb_passer_rating = mean(passer_rating),
+            predicted_qb_passer_rating = mean(predicted_passer_rating),
+            num_games = n(),
+            avg_salary_year = mean(avg_year),
+            retired = first(retired))
 
 total_games_played_df <- qb_all_years_comp |> 
   select(passer_name = passer_player_name, total_num_games = num_games)
@@ -116,6 +111,10 @@ max_games <- qb_clean |>
   summarize(num_games = n()) |> 
   summarize(max_games = max(num_games)) |> 
   pull(max_games)
+
+max_rush_yards <- qb_clean |> 
+  summarize(max = max(total_rush_yds)) |> 
+  pull(max)
 
 compute_confidence_interval <- function(vals, confidence = .95) {
   n <- length(vals)

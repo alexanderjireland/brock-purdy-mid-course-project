@@ -14,7 +14,8 @@ function(input, output, session) {
   
   qb_comparison <- reactive({
     qb_clean |> 
-      filter(year %in% seq(input$year_range[1], input$year_range[2], step = 1)) |> 
+      filter(year %in% seq(input$year_range[1], input$year_range[2], step = 1),
+             total_rush_yds <= input$max_rush_yds) |> 
       group_by(passer_player_name) |> 
       summarize(actual_qb_anya = mean(any_a),
                 predicted_qb_anya = mean(predicted_anya),
@@ -29,7 +30,8 @@ function(input, output, session) {
   
   filtered_qbs_input <- reactive({
     qb_clean |> 
-      filter(year %in% seq(input$year_range[1], input$year_range[2], by = 1)) |> 
+      filter(year %in% seq(input$year_range[1], input$year_range[2], by = 1),
+             total_rush_yds <= input$max_rush_yds) |> 
       group_by(passer_player_name) |> 
       filter(if (input$active_players) retired == FALSE else TRUE) |> 
       ungroup() |> 
@@ -47,20 +49,24 @@ function(input, output, session) {
   
   filtered_qb_clean <- reactive({
     qb_clean |> 
-      filter(passer_player_name %in% filtered_qbs_input())
+      filter(passer_player_name %in% filtered_qbs_input(),
+             total_rush_yds <= input$max_rush_yds)
   })
   
   filtered_qb_comparison_grouped <- reactive({
     coached_qbs <- qb_clean |> 
-      filter(coach == input$coach & year %in% seq(input$year_range[1], input$year_range[2], by = 1)) |> 
+      filter(coach == input$coach & year %in% seq(input$year_range[1], input$year_range[2], by = 1),
+             total_rush_yds <= input$max_rush_yds) |> 
       pull(passer_player_name)
     filtered_qb_comparison() |> 
+      mutate(coached_group = if_else(passer_player_name %in% coached_qbs,
+                                     glue("{input$coach}'s QBs"),
+                                     "Other QBs")) |> 
       mutate(Group = case_when(
         passer_player_name == "B.Purdy" ~ "Brock Purdy",
         passer_player_name == input$qb_name ~ "Selected QB",
         passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
-        passer_player_name %in% coached_qbs ~ glue("{input$coach}'s QBs"),
-        TRUE ~ "Other QBs"
+        TRUE ~ coached_group
       ))
   })
   
