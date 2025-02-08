@@ -1,6 +1,9 @@
-body {
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
   background-color: #ffffff;
-  color: #AA0000;
+  color: #1E1E1E;
 }
 
 .navbar, .panel-heading, .btn-primary {
@@ -20,4 +23,8 @@ a, .text-highlight {
 
 .panel, .well {
   border-color: #B3985D;
+}
+
+.plotly {
+  background-color: white;
 }

@@ -47,10 +47,7 @@ fluidPage(
                   selected = NULL,
                   multiple = FALSE,
                   selectize = TRUE),
-      
-      checkboxInput("average_cluster",
-                    "Average of each Cluster",
-                    FALSE),
+
       
       selectInput("dependent_var",
                   "Select Statistic",
@@ -73,8 +70,12 @@ fluidPage(
     # Main panel with tabs for different plots
     mainPanel(
       tabsetPanel(
-        tabPanel("Brock's Stats", plotlyOutput("boxplot")),
+        tabPanel("Brock's Stats", plotOutput("scatter_pressure"),
+                 plotlyOutput("boxplot")),
         tabPanel("Model vs. Reality", plotlyOutput("plot_model_actual"),
+                 checkboxInput("average_cluster",
+                               "Average of each Cluster",
+                               FALSE),
                  DTOutput("qb_games_table")),
         
         tabPanel("3D Plot", 
