@@ -70,7 +70,7 @@ fluidPage(
     # Main panel with tabs for different plots
     mainPanel(
       tabsetPanel(
-        tabPanel("Brock's Stats", plotOutput("scatter_pressure"),
+        tabPanel("Brock's Stats", plotlyOutput("scatter_pressure"),
                  plotlyOutput("boxplot")),
         tabPanel("Model vs. Reality", plotlyOutput("plot_model_actual"),
                  checkboxInput("average_cluster",

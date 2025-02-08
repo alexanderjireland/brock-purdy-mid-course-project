@@ -138,7 +138,7 @@ function(input, output, session) {
       layout(height = 700)
   })
   
-  output$scatter_pressure <- renderPlot({
+  output$scatter_pressure <- renderPlotly({
     dependent_var <- dependent_var_hashmap[input$dependent_var]
     
     
@@ -161,9 +161,14 @@ function(input, output, session) {
     
     print(scatter_data)
     
-    ggplot(data = scatter_data, aes(x = sacks_per_dropback, y = .data[[dependent_var]], color = Group)) + 
-      geom_point() +
+    p <- ggplot(data = scatter_data, aes(x = sacks_per_dropback, y = .data[[dependent_var]], 
+                                         color = Group,
+                                         text = paste("QB:", passer_player_name)),
+                size = .1) + 
+      geom_point(alpha = .5) +
       scale_color_manual(values = group_color_assignments())
+    
+    ggplotly(p, tooltip = "text")
   })
   
   output$plot_model_actual <- renderPlotly({
