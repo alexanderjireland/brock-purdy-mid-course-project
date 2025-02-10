@@ -47,16 +47,22 @@ fluidPage(
                   selected = NULL,
                   multiple = FALSE,
                   selectize = TRUE),
-
+      
       
       selectInput("dependent_var",
                   "Select Statistic",
                   choices = c("EPA", "ANY/A", "Passer Rating")),
       
-     sliderInput("max_rush_yds",
-                 "Games With Rushing Yards Between:",
-                 min = 0, max = 250, value = c(0, 250), step = 10,
-                 animate = TRUE),
+      sliderInput("max_rush_yds",
+                  "Games With Rushing Yards Between:",
+                  min = 0, max = 250, value = c(0, 250), step = 10,
+                  animate = TRUE),
+      
+      checkboxInput("high_rush",
+                    "High Rushing Support",
+                    FALSE),
+      
+      textOutput("high_rush_explanation"),
       
       textOutput("stat_explanation"),
       

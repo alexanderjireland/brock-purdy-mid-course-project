@@ -60,7 +60,8 @@ top_ten_paid_qbs <- qb_game_data |>
 qb_clean <- qb_game_data |> 
   select(avg_year, coach, team, home_team, away_team, year, passer_player_name, any_a, qb_epa, passer_rating, yards_after_catch, percent_pass_yds_from_yac, sacks_per_dropback, short_pass, percent_short_pass, team_rush_epa, total_rush_yds, retired, win) |> 
   mutate_if(is.numeric, ~ replace(., !is.finite(.), NA)) |> 
-  mutate(avg_year = as.numeric((gsub(",","", sub(".", "", avg_year))))) |> 
+  mutate(avg_year = as.numeric((gsub(",","", sub(".", "", avg_year)))),
+         high_rushing = total_rush_yds >= 165) |> 
   filter(percent_pass_yds_from_yac <= 1 & percent_pass_yds_from_yac >= 0)
 
 qb_clean_numeric_cols <- qb_clean |> 

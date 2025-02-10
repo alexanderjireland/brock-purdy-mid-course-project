@@ -15,7 +15,9 @@ function(input, output, session) {
   qb_comparison <- reactive({
     qb_clean |> 
       filter(year %in% seq(input$year_range[1], input$year_range[2], step = 1),
-             total_rush_yds <= input$max_rush_yds[2] & total_rush_yds >= input$max_rush_yds[1]) |> 
+               between(total_rush_yds, input$max_rush_yds[1], input$max_rush_yds[2]),
+               if (input$high_rush) high_rushing else TRUE) |> 
+      
       group_by(passer_player_name) |> 
       summarize(actual_qb_anya = mean(any_a),
                 predicted_qb_anya = mean(predicted_anya),
@@ -31,7 +33,8 @@ function(input, output, session) {
   filtered_qbs_input <- reactive({
     qb_clean |> 
       filter(year %in% seq(input$year_range[1], input$year_range[2], by = 1),
-             total_rush_yds <= input$max_rush_yds[2] & total_rush_yds >= input$max_rush_yds[1]) |> 
+             total_rush_yds <= input$max_rush_yds[2] & total_rush_yds >= input$max_rush_yds[1],
+             ) |> 
       group_by(passer_player_name) |> 
       filter(if (input$active_players) retired == FALSE else TRUE) |> 
       ungroup() |> 
@@ -58,14 +61,12 @@ function(input, output, session) {
              total_rush_yds <= input$max_rush_yds[2] & total_rush_yds >= input$max_rush_yds[1]) |> 
       pull(passer_player_name)
     filtered_qb_comparison() |> 
-      mutate(coached_group = if_else(passer_player_name %in% coached_qbs,
-                                     glue("{input$coach}'s QBs"),
-                                     "Other QBs")) |> 
       mutate(Group = case_when(
         passer_player_name == "B.Purdy" ~ "Brock Purdy",
         passer_player_name == input$qb_name ~ "Selected QB",
         passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
-        TRUE ~ coached_group
+        passer_player_name %in% coached_qbs ~ glue("{input$coach}'s QBs"),
+        TRUE ~ "Other QBs"
       ))
   })
   
@@ -93,7 +94,7 @@ function(input, output, session) {
   })
   
   group_color_assignments <- reactive({
-    setNames(c("#8C1515", "#1F497D", "#A5A5A5", "#CBB677", "#D9D9D9"),
+    setNames(c("#8C1515", "#1F497D", "#5F9EA0", "#CBB677", "#D9D9D9"),
              c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))
   })
   
@@ -132,7 +133,9 @@ function(input, output, session) {
         axis.text.x = element_text(angle = 15, hjust = 1, size = 12)
       ) +
       scale_color_manual(values = group_color_assignments()) +
-      scale_fill_manual(values = group_color_assignments())
+      scale_fill_manual(values = group_color_assignments()) +
+      coord_cartesian(ylim = c(min(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE),
+                               max(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE)))
     
     ggplotly(p, tooltip = "text") |> 
       layout(height = 700)
@@ -157,16 +160,18 @@ function(input, output, session) {
         passer_player_name == input$qb_name ~ "Selected QB",
         passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
         TRUE ~ coached_group
-      ))
-    
-    print(scatter_data)
+      )) |> 
+      mutate(Group = factor(Group, levels = c("Other QBs", glue("{input$coach}'s QBs"), "Top 10 Highest Paid QBs", "Selected QB", "Brock Purdy")))
     
     p <- ggplot(data = scatter_data, aes(x = sacks_per_dropback, y = .data[[dependent_var]], 
                                          color = Group,
                                          text = paste("QB:", passer_player_name)),
                 size = .1) + 
       geom_point(alpha = .5) +
-      scale_color_manual(values = group_color_assignments())
+      scale_color_manual(values = group_color_assignments()) +
+      ggtitle("Scatter Plot") +
+      xlab("Sacks per Dropback") +
+      ylab(input$dependent_var)
     
     ggplotly(p, tooltip = "text")
   })
