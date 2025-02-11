@@ -6,10 +6,11 @@ library(scales)
 library(rgl)
 library(DT)
 library(shinythemes)
+library(shiny)
 
-qb_game_data = read.csv("../data/qb_game_data.csv")
-qb_salary = read.csv("../data/QB_Salary.csv")
-coach_data = read.csv("../data/all_coach_data.csv")
+qb_game_data = read.csv("qb_game_data.csv")
+qb_salary = read.csv("QB_Salary.csv")
+coach_data = read.csv("all_coach_data.csv")
 qb_salary <- qb_salary |> 
   mutate(passer_player_name = paste0(substr(sub(" .*", "", Player), 1, 1), ".", sub(".* ", "", Player))) |> 
   select(passer_player_name, Avg..Year)

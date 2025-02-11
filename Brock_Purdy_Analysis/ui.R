@@ -7,8 +7,6 @@
 #    https://shiny.posit.co/
 #
 
-library(shiny)
-
 # Define UI for application
 fluidPage(
   tags$head(
