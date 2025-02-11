@@ -116,6 +116,8 @@ function(input, output, session) {
   
   output$runBoxPlot <- renderPlotly({
     
+    dependent_var <- dependent_var_hashmap[input$dependent_var]
+    
     coached_qbs <- qb_clean |> 
       filter(coach == input$coach) |> 
       pull(passer_player_name)
@@ -139,7 +141,8 @@ function(input, output, session) {
       geom_boxplot(aes(fill = Group), width = .6, alpha = .7) + 
       geom_jitter(aes(color = Group,
                       text = paste0("QB: ", passer_player_name, "<br>",
-                                    "Rush Yards: ", total_rush_yds)),
+                                    "Rush Yards: ", total_rush_yds, "<br>",
+                                    input$dependent_var, ": ", round(.data[[paste0(dependent_var)]], 2))),
                   width = .2, alpha = .6, size = .2) + 
       ggtitle("Distribution of Rushing Yards by QB Group") + 
       xlab("Quarterback Group") + 
