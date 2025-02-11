@@ -113,6 +113,49 @@ function(input, output, session) {
   })
   
   
+  
+  output$runBoxPlot <- renderPlotly({
+    
+    coached_qbs <- qb_clean |> 
+      filter(coach == input$coach) |> 
+      pull(passer_player_name)
+    
+    scatter_data <-  filtered_qb_clean() |> 
+      rename(epa = qb_epa,
+             anya = any_a) |> 
+      mutate(coached_group = if_else(passer_player_name %in% coached_qbs,
+                                     glue("{input$coach}'s QBs"),
+                                     "Other QBs")) |> 
+      mutate(Group = case_when(
+        passer_player_name == "B.Purdy" ~ "Brock Purdy",
+        passer_player_name == input$qb_name ~ "Selected QB",
+        passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
+        TRUE ~ coached_group
+      )) |> 
+      mutate(Group = factor(Group, levels = c("Other QBs", glue("{input$coach}'s QBs"), "Top 10 Highest Paid QBs", "Selected QB", "Brock Purdy")))
+    
+    p <- ggplot(scatter_data, aes(x = Group, y = total_rush_yds, fill = Group)) + 
+      geom_violin(aes(fill = Group), alpha = .4, draw_quantiles = c(.25, .5, .75)) +
+      geom_boxplot(aes(fill = Group), width = .6, alpha = .7) + 
+      geom_jitter(aes(color = Group,
+                      text = paste0("QB: ", passer_player_name, "<br>",
+                                    "Rush Yards: ", total_rush_yds)),
+                  width = .2, alpha = .6, size = .2) + 
+      ggtitle("Distribution of Rushing Yards by QB Group") + 
+      xlab("Quarterback Group") + 
+      ylab("Rushing Yards a Game") + 
+      theme_minimal(base_size = 14) +
+      theme(
+        axis.text.x = element_text(angle = 15, hjust = 1, size = 12)
+      ) +
+      scale_color_manual(values = group_color_assignments()) +
+      scale_fill_manual(values = group_color_assignments())
+    
+    ggplotly(p, tooltip = 'text') |> 
+      layout(height = 700)
+  })
+  
+  
   output$boxplot <- renderPlotly({
     dependent_var <- dependent_var_hashmap[input$dependent_var]
     

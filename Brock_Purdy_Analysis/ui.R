@@ -53,7 +53,7 @@ fluidPage(
       
       sliderInput("max_rush_yds",
                   "Games With Rushing Yards Between:",
-                  min = 0, max = 250, value = c(0, 250), step = 10,
+                  min = 0, max = 400, value = c(0, 400), step = 10,
                   animate = TRUE),
       
       checkboxInput("high_rush",
@@ -76,6 +76,7 @@ fluidPage(
       tabsetPanel(
         tabPanel("Brock's Stats", plotlyOutput("scatter_pressure"),
                  plotlyOutput("boxplot")),
+        tabPanel("Rushing Data", plotlyOutput("runBoxPlot")),
         tabPanel("Model vs. Reality", plotlyOutput("plot_model_actual"),
                  checkboxInput("average_cluster",
                                "Average of each Cluster",
