@@ -75,6 +75,48 @@ function(input, output, session) {
       ))
   })
   
+  scatter_pressure_data <- reactive({
+    
+    coached_qbs <- qb_clean |> 
+      filter(coach == input$coach) |> 
+      pull(passer_player_name)
+    
+    filtered_qbs() |> 
+      rename(epa = qb_epa,
+             anya = any_a) |> 
+      mutate(coached_group = if_else(passer_player_name %in% coached_qbs,
+                                     glue("{input$coach}'s QBs"),
+                                     "Other QBs")) |> 
+      mutate(Group = case_when(
+        passer_player_name == "B.Purdy" ~ "Brock Purdy",
+        passer_player_name == input$qb_name ~ glue("{input$qb_name}"),
+        passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
+        TRUE ~ coached_group
+      )) |> 
+      mutate(Group = factor(Group, levels = c("Other QBs", glue("{input$coach}'s QBs"), "Top 10 Highest Paid QBs", glue("{input$qb_name}"), "Brock Purdy")))
+  })
+  
+  confidence_scatter_pressure <- reactive({
+    scatter_pressure_data() |> 
+      group_by(Group) |> 
+      summarize(pressure_mean = compute_confidence_interval(.data[["sacks_per_dropback"]])[1],
+                pressure_low = compute_confidence_interval(.data[["sacks_per_dropback"]])[2],
+                pressure_high = compute_confidence_interval(.data[["sacks_per_dropback"]])[3],
+                
+                epa_low = compute_confidence_interval(.data[['epa']])[2],
+                epa_high = compute_confidence_interval(.data[['epa']])[3],
+                epa = compute_confidence_interval(.data[['epa']])[1],
+                
+                anya_low = compute_confidence_interval(.data[['anya']])[2],
+                anya_high = compute_confidence_interval(.data[['anya']])[3],
+                anya = compute_confidence_interval(.data[['anya']])[1],
+                
+                passer_rating_low = compute_confidence_interval(.data[['passer_rating']])[2],
+                passer_rating_high = compute_confidence_interval(.data[['passer_rating']])[3],
+                passer_rating = compute_confidence_interval(.data[['passer_rating']])[1]
+      )
+  })
+  
   
   
   
@@ -195,43 +237,8 @@ function(input, output, session) {
   output$scatter_pressure <- renderPlotly({
     dependent_var <- dependent_var_hashmap[input$dependent_var]
     
-    
-    coached_qbs <- qb_clean |> 
-      filter(coach == input$coach) |> 
-      pull(passer_player_name)
-    
-    scatter_pressure_data <-  filtered_qbs() |> 
-      rename(epa = qb_epa,
-             anya = any_a) |> 
-      mutate(coached_group = if_else(passer_player_name %in% coached_qbs,
-                                     glue("{input$coach}'s QBs"),
-                                     "Other QBs")) |> 
-      mutate(Group = case_when(
-        passer_player_name == "B.Purdy" ~ "Brock Purdy",
-        passer_player_name == input$qb_name ~ glue("{input$qb_name}"),
-        passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
-        TRUE ~ coached_group
-      )) |> 
-      mutate(Group = factor(Group, levels = c("Other QBs", glue("{input$coach}'s QBs"), "Top 10 Highest Paid QBs", glue("{input$qb_name}"), "Brock Purdy")))
-    
-    confidence_scatter_pressure <- scatter_pressure_data |> 
-      group_by(Group) |> 
-      summarize(pressure_mean = compute_confidence_interval(.data[["sacks_per_dropback"]])[1],,
-                pressure_low = compute_confidence_interval(.data[["sacks_per_dropback"]])[2],
-                pressure_high = compute_confidence_interval(.data[["sacks_per_dropback"]])[3],
-                
-                epa_low = compute_confidence_interval(.data[['epa']])[2],
-                epa_high = compute_confidence_interval(.data[['epa']])[3],
-                epa = compute_confidence_interval(.data[['epa']])[1],
-                
-                anya_low = compute_confidence_interval(.data[['anya']])[2],
-                anya_high = compute_confidence_interval(.data[['anya']])[3],
-                anya = compute_confidence_interval(.data[['anya']])[1],
-                
-                passer_rating_low = compute_confidence_interval(.data[['passer_rating']])[2],
-                passer_rating_high = compute_confidence_interval(.data[['passer_rating']])[3],
-                passer_rating = compute_confidence_interval(.data[['passer_rating']])[1]
-      )
+    scatter_pressure_data <- scatter_pressure_data()
+    confidence_scatter_pressure <- confidence_scatter_pressure()
     
     pressure_low <- confidence_scatter_pressure$pressure_low
     pressure_high <- confidence_scatter_pressure$pressure_high
@@ -280,6 +287,65 @@ function(input, output, session) {
     }
     
     ggplotly(p, tooltip = "text")
+  })
+  
+  output$average_pressure_line <- renderPlot({
+    
+
+    
+    dependent_var <- dependent_var_hashmap[input$dependent_var]
+    
+    get_stat_summary <- function(threshold, stat_col){
+      coached_qbs <- qb_clean |> 
+        filter(coach == input$coach) |> 
+        pull(passer_player_name)
+      
+      filtered_threshold_data <- qb_clean |> 
+        filter(year %in% seq(input$year_range[1], input$year_range[2], by = 1),
+               total_rush_yds <= input$max_rush_yds[2] & total_rush_yds >= input$max_rush_yds[1],
+               sacks_per_dropback >= threshold
+        ) |> 
+        group_by(passer_player_name) |> 
+        filter(if (input$active_players) retired == FALSE else TRUE) |> 
+        ungroup() |> 
+        rename(epa = qb_epa,
+               anya = any_a)|> 
+        mutate(coached_group = if_else(passer_player_name %in% coached_qbs,
+                                       glue("{input$coach}'s QBs"),
+                                       "Other QBs")) |> 
+        mutate(Group = case_when(
+          passer_player_name == "B.Purdy" ~ "Brock Purdy",
+          passer_player_name == input$qb_name ~ glue("{input$qb_name}"),
+          passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
+          TRUE ~ coached_group
+        )) 
+      
+      filtered_threshold_data |> 
+        group_by(Group) |> 
+        summarize(
+          min_pressure_rate = threshold,
+          mean_stat = compute_confidence_interval(.data[[stat_col]])[1],
+          low_stat = compute_confidence_interval(.data[[stat_col]])[2],
+          high_stat = compute_confidence_interval(.data[[stat_col]])[3],
+          Group = first(Group),
+          .groups = "drop"
+        )
+      
+    }
+    
+    thresholds <- seq(0, .2, by = .01)
+    stat_summary_thresholds <- map_dfr(thresholds, ~ get_stat_summary(.x, stat_col = dependent_var))
+
+    ggplot(stat_summary_thresholds, aes(x = min_pressure_rate, y = mean_stat, color = Group, fill = Group)) +
+      geom_line() + 
+      geom_ribbon(aes(ymin = low_stat, ymax = high_stat, fill = Group), alpha = .2) +
+      scale_color_manual(values = group_color_assignments()) +
+      scale_fill_manual(values = group_color_assignments()) +
+      theme_minimal() +
+      ggtitle("Average Pressure Sensitivity") +
+      xlab("Minimum Sacks per Dropback") +
+      ylab(glue("Average {input$dependent_var}"))
+    
   })
   
   output$plot_model_actual <- renderPlotly({

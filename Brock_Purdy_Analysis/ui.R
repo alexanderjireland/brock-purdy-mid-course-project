@@ -66,7 +66,7 @@ fluidPage(
       
       sliderInput("min_pressure_rate",
                   "Select Minimum Sacks per Dropback",
-                  min = 0, max = .45, value = 0, step = .01, 
+                  min = 0, max = .2, value = 0, step = .01, 
                   animate = TRUE),
       
       textOutput("high_rush_explanation"),
@@ -87,7 +87,8 @@ fluidPage(
         
         tabPanel("Home Page"),
         tabPanel("Purdy under High-Pressure Situations",
-                 plotlyOutput("scatter_pressure")),
+                 plotlyOutput("scatter_pressure"),
+                 plotOutput("average_pressure_line")),
         tabPanel("Purdy's Performance in High-Rushing Games", 
                  plotlyOutput("runBoxPlot")),
         tabPanel("Purdy's Performance in Short Passing Games"),
