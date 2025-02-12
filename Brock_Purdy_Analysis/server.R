@@ -207,29 +207,47 @@ function(input, output, session) {
       )) |> 
       mutate(Group = factor(Group, levels = c("Other QBs", glue("{input$coach}'s QBs"), "Top 10 Highest Paid QBs", "Selected QB", "Brock Purdy")))
     
-    confidence_scatter_pressure <- scatter_pressure_data |> 
-      group_by(Group) |> 
-      summarize(pressure_mean = compute_confidence_interval(.data[["sacks_per_dropback"]])[1],,
-                pressure_low = compute_confidence_interval(.data[["sacks_per_dropback"]])[2],
-                pressure_high = compute_confidence_interval(.data[["sacks_per_dropback"]])[3],
-                
-                epa_low = compute_confidence_interval(.data[['epa']])[2],
-                epa_high = compute_confidence_interval(.data[['epa']])[3],
-                epa_mean = compute_confidence_interval(.data[['epa']])[1],
-                
-                anya_low = compute_confidence_interval(.data[['anya']])[2],
-                anya_high = compute_confidence_interval(.data[['anya']])[3],
-                anya_mean = compute_confidence_interval(.data[['anya']])[1],
-                
-                passer_rating_low = compute_confidence_interval(.data[['passer_rating']])[2],
-                passer_rating_high = compute_confidence_interval(.data[['passer_rating']])[3],
-                passer_rating_mean = compute_confidence_interval(.data[['passer_rating']])[1]
-      )
     
-    pressure_low <- clustered_data$pressure_low
-    pressure_high <- clustered_data$pressure_high
-    actual_low <- clustered_data[[paste0(dependent_var, "_low")]]
-    actual_high <- clustered_data[[paste0(dependent_var, "_high")]]
+    
+    if (input$average_cluster) {
+      confidence_scatter_pressure <- scatter_pressure_data |> 
+        group_by(Group) |> 
+        summarize(pressure_mean = compute_confidence_interval(.data[["sacks_per_dropback"]])[1],,
+                  pressure_low = compute_confidence_interval(.data[["sacks_per_dropback"]])[2],
+                  pressure_high = compute_confidence_interval(.data[["sacks_per_dropback"]])[3],
+                  
+                  epa_low = compute_confidence_interval(.data[['epa']])[2],
+                  epa_high = compute_confidence_interval(.data[['epa']])[3],
+                  epa = compute_confidence_interval(.data[['epa']])[1],
+                  
+                  anya_low = compute_confidence_interval(.data[['anya']])[2],
+                  anya_high = compute_confidence_interval(.data[['anya']])[3],
+                  anya = compute_confidence_interval(.data[['anya']])[1],
+                  
+                  passer_rating_low = compute_confidence_interval(.data[['passer_rating']])[2],
+                  passer_rating_high = compute_confidence_interval(.data[['passer_rating']])[3],
+                  passer_rating = compute_confidence_interval(.data[['passer_rating']])[1]
+        )
+      
+      pressure_low <- confidence_scatter_pressure$pressure_low
+      pressure_high <- confidence_scatter_pressure$pressure_high
+      actual_low <- confidence_scatter_pressure[[paste0(dependent_var, "_low")]]
+      actual_high <- confidence_scatter_pressure[[paste0(dependent_var, "_high")]]
+      
+      p <- ggplot(data = confidence_scatter_pressure, aes(x = pressure_mean, y = .data[[dependent_var]], 
+                                                    color = Group,
+                                                    text = paste("Group:", Group)),
+                  size = .1) + 
+        geom_point(alpha = .5) +
+        scale_color_manual(values = group_color_assignments()) +
+        ggtitle(glue("Pressure Sensitivity")) +
+        xlab("Sacks per Dropback") +
+        ylab(input$dependent_var) +
+        geom_point(alpha = .7, size = 1) +
+        geom_errorbar(aes(ymin = actual_low, ymax = actual_high)) +
+        geom_errorbarh(aes(xmin = pressure_low, xmax = pressure_high))
+    }
+    else {
     
     p <- ggplot(data = scatter_pressure_data, aes(x = sacks_per_dropback, y = .data[[dependent_var]], 
                                          color = Group,
@@ -237,9 +255,10 @@ function(input, output, session) {
                 size = .1) + 
       geom_point(alpha = .5) +
       scale_color_manual(values = group_color_assignments()) +
-      ggtitle("Scatter Plot") +
+      ggtitle(glue("Pressure Sensitivity")) +
       xlab("Sacks per Dropback") +
       ylab(input$dependent_var)
+    }
     
     ggplotly(p, tooltip = "text")
   })
