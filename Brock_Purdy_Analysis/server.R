@@ -333,12 +333,12 @@ function(input, output, session) {
       
     }
     
-    thresholds <- seq(0, .2, by = .01)
+    thresholds <- seq(0, .13, by = .01)
     stat_summary_thresholds <- map_dfr(thresholds, ~ get_stat_summary(.x, stat_col = dependent_var))
 
-    ggplot(stat_summary_thresholds, aes(x = min_pressure_rate, y = mean_stat, color = Group, fill = Group)) +
+    ggplot(stat_summary_thresholds |> mutate(Group = factor(Group, levels = c("Brock Purdy", glue("{input$qb_name}"), "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))), aes(x = min_pressure_rate, y = mean_stat, color = Group, fill = Group), alpha = .5) +
       geom_line() + 
-      geom_ribbon(aes(ymin = low_stat, ymax = high_stat, fill = Group), alpha = .2) +
+      geom_ribbon(aes(ymin = low_stat, ymax = high_stat, fill = Group), alpha = .1) +
       scale_color_manual(values = group_color_assignments()) +
       scale_fill_manual(values = group_color_assignments()) +
       theme_minimal() +
