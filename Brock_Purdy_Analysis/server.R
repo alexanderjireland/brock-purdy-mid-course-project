@@ -289,7 +289,7 @@ function(input, output, session) {
     ggplotly(p, tooltip = "text")
   })
   
-  output$average_pressure_line <- renderPlot({
+  output$average_pressure_line <- renderPlotly({
     
 
     
@@ -336,7 +336,12 @@ function(input, output, session) {
     thresholds <- seq(0, .13, by = .01)
     stat_summary_thresholds <- map_dfr(thresholds, ~ get_stat_summary(.x, stat_col = dependent_var))
 
-    ggplot(stat_summary_thresholds |> mutate(Group = factor(Group, levels = c("Brock Purdy", glue("{input$qb_name}"), "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))), aes(x = min_pressure_rate, y = mean_stat, color = Group, fill = Group), alpha = .5) +
+    p <- ggplot(stat_summary_thresholds |> 
+                  mutate(Group = factor(Group, levels = c("Brock Purdy", glue("{input$qb_name}"), "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))), 
+                aes(x = min_pressure_rate, y = mean_stat, color = Group, fill = Group), 
+                alpha = .5,
+                text = paste("Group:", Group, "<br>",
+                             "Mean", input$dependent_var, ":", mean_stat)) +
       geom_line() + 
       geom_ribbon(aes(ymin = low_stat, ymax = high_stat, fill = Group), alpha = .1) +
       scale_color_manual(values = group_color_assignments()) +
@@ -346,6 +351,7 @@ function(input, output, session) {
       xlab("Minimum Sacks per Dropback") +
       ylab(glue("Average {input$dependent_var}"))
     
+    ggplotly(p, tooltip = "text")
   })
   
   output$plot_model_actual <- renderPlotly({
