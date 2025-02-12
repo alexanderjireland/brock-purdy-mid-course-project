@@ -60,6 +60,10 @@ fluidPage(
                     "High Rushing Support",
                     FALSE),
       
+      checkboxInput("average_cluster",
+                    "Average of each Cluster",
+                    FALSE),
+      
       textOutput("high_rush_explanation"),
       
       textOutput("stat_explanation"),
@@ -74,16 +78,20 @@ fluidPage(
     # Main panel with tabs for different plots
     mainPanel(
       tabsetPanel(
-        tabPanel("Brock's Stats", plotlyOutput("scatter_pressure"),
-                 plotlyOutput("boxplot")),
-        tabPanel("Rushing Data", plotlyOutput("runBoxPlot")),
-        tabPanel("Model vs. Reality", plotlyOutput("plot_model_actual"),
-                 checkboxInput("average_cluster",
-                               "Average of each Cluster",
-                               FALSE),
-                 DTOutput("qb_games_table")),
+        type = 'pills',
         
-        tabPanel("3D Plot", 
+        tabPanel("Home Page"),
+        tabPanel("Purdy under High-Pressure Situations",
+                 plotlyOutput("scatter_pressure")),
+        tabPanel("Purdy's Performance in High-Rushing Games", 
+                 plotlyOutput("runBoxPlot")),
+        tabPanel("Purdy's Performance in Short Passing Games"),
+        tabPanel("Evaluating Purdy's Overall Performance vs. Other QBs",
+                 plotlyOutput("boxplot")),
+        tabPanel("Predictive Model Analysis", 
+                 plotlyOutput("plot_model_actual"),
+                 DTOutput("qb_games_table")),
+        tabPanel("Exploratory Playground", 
                  selectInput('x_axis',
                              "Select x-axis",
                              choices = qb_clean_numeric_col_names,
