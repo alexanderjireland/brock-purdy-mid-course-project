@@ -13,8 +13,9 @@ function(input, output, session) {
   qb_comparison <- reactive({
     qb_clean |> 
       filter(year %in% seq(input$year_range[1], input$year_range[2], step = 1),
-               between(total_rush_yds, input$max_rush_yds[1], input$max_rush_yds[2]),
-               if (input$high_rush) high_rushing else TRUE) |> 
+             between(total_rush_yds, input$max_rush_yds[1], input$max_rush_yds[2]),
+             sacks_per_dropback >= input$min_pressure_rate,
+             if (input$high_rush) high_rushing else TRUE) |> 
       
       group_by(passer_player_name) |> 
       summarize(actual_qb_anya = mean(any_a),
@@ -28,14 +29,19 @@ function(input, output, session) {
                 retired = first(retired))
   })
   
-  filtered_qbs_input <- reactive({
+  filtered_qbs <- reactive({
     qb_clean |> 
       filter(year %in% seq(input$year_range[1], input$year_range[2], by = 1),
              total_rush_yds <= input$max_rush_yds[2] & total_rush_yds >= input$max_rush_yds[1],
-             ) |> 
+             sacks_per_dropback >= input$min_pressure_rate
+      ) |> 
       group_by(passer_player_name) |> 
       filter(if (input$active_players) retired == FALSE else TRUE) |> 
-      ungroup() |> 
+      ungroup() 
+  })
+  
+  filtered_qbs_input <- reactive({
+    filtered_qbs() |> 
       distinct(passer_player_name) |> 
       pull(passer_player_name) |> 
       sort()
@@ -56,12 +62,13 @@ function(input, output, session) {
   filtered_qb_comparison_grouped <- reactive({
     coached_qbs <- qb_clean |> 
       filter(coach == input$coach & year %in% seq(input$year_range[1], input$year_range[2], by = 1),
-             total_rush_yds <= input$max_rush_yds[2] & total_rush_yds >= input$max_rush_yds[1]) |> 
+             total_rush_yds <= input$max_rush_yds[2] & total_rush_yds >= input$max_rush_yds[1],
+             sacks_per_dropback >= input$min_pressure_rate) |> 
       pull(passer_player_name)
     filtered_qb_comparison() |> 
       mutate(Group = case_when(
         passer_player_name == "B.Purdy" ~ "Brock Purdy",
-        passer_player_name == input$qb_name ~ "Selected QB",
+        passer_player_name == input$qb_name ~ glue("{input$qb_name}"),
         passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
         passer_player_name %in% coached_qbs ~ glue("{input$coach}'s QBs"),
         TRUE ~ "Other QBs"
@@ -93,7 +100,7 @@ function(input, output, session) {
   
   group_color_assignments <- reactive({
     setNames(c("#8C1515", "#1F497D", "#5F9EA0", "#CBB677", "#D9D9D9"),
-             c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))
+             c("Brock Purdy", glue("{input$qb_name}"), "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))
   })
   
   output$stat_explanation <- renderText({
@@ -130,11 +137,11 @@ function(input, output, session) {
                                      "Other QBs")) |> 
       mutate(Group = case_when(
         passer_player_name == "B.Purdy" ~ "Brock Purdy",
-        passer_player_name == input$qb_name ~ "Selected QB",
+        passer_player_name == input$qb_name ~ glue("{input$qb_name}"),
         passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
         TRUE ~ coached_group
       )) |> 
-      mutate(Group = factor(Group, levels = c("Other QBs", glue("{input$coach}'s QBs"), "Top 10 Highest Paid QBs", "Selected QB", "Brock Purdy")))
+      mutate(Group = factor(Group, levels = c("Other QBs", glue("{input$coach}'s QBs"), "Top 10 Highest Paid QBs", glue("{input$qb_name}"), "Brock Purdy")))
     
     p <- ggplot(scatter_data, aes(x = Group, y = total_rush_yds, fill = Group)) + 
       geom_violin(aes(fill = Group), alpha = .4, draw_quantiles = c(.25, .5, .75)) +
@@ -162,7 +169,7 @@ function(input, output, session) {
   output$boxplot <- renderPlotly({
     dependent_var <- dependent_var_hashmap[input$dependent_var]
     
-    p <- ggplot(data = filtered_qb_comparison_grouped() |> mutate(Group = factor(Group, levels = c("Brock Purdy", "Selected QB", "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))),
+    p <- ggplot(data = filtered_qb_comparison_grouped() |> mutate(Group = factor(Group, levels = c("Brock Purdy", glue("{input$qb_name}"), "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))),
                 aes(x = Group, y = .data[[paste0("actual_qb_", dependent_var)]]))+
       ylab(input$dependent_var) +
       xlab("Quarterback Group") +
@@ -193,7 +200,7 @@ function(input, output, session) {
       filter(coach == input$coach) |> 
       pull(passer_player_name)
     
-    scatter_pressure_data <-  filtered_qb_clean() |> 
+    scatter_pressure_data <-  filtered_qbs() |> 
       rename(epa = qb_epa,
              anya = any_a) |> 
       mutate(coached_group = if_else(passer_player_name %in% coached_qbs,
@@ -201,42 +208,45 @@ function(input, output, session) {
                                      "Other QBs")) |> 
       mutate(Group = case_when(
         passer_player_name == "B.Purdy" ~ "Brock Purdy",
-        passer_player_name == input$qb_name ~ "Selected QB",
+        passer_player_name == input$qb_name ~ glue("{input$qb_name}"),
         passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
         TRUE ~ coached_group
       )) |> 
-      mutate(Group = factor(Group, levels = c("Other QBs", glue("{input$coach}'s QBs"), "Top 10 Highest Paid QBs", "Selected QB", "Brock Purdy")))
+      mutate(Group = factor(Group, levels = c("Other QBs", glue("{input$coach}'s QBs"), "Top 10 Highest Paid QBs", glue("{input$qb_name}"), "Brock Purdy")))
     
+    confidence_scatter_pressure <- scatter_pressure_data |> 
+      group_by(Group) |> 
+      summarize(pressure_mean = compute_confidence_interval(.data[["sacks_per_dropback"]])[1],,
+                pressure_low = compute_confidence_interval(.data[["sacks_per_dropback"]])[2],
+                pressure_high = compute_confidence_interval(.data[["sacks_per_dropback"]])[3],
+                
+                epa_low = compute_confidence_interval(.data[['epa']])[2],
+                epa_high = compute_confidence_interval(.data[['epa']])[3],
+                epa = compute_confidence_interval(.data[['epa']])[1],
+                
+                anya_low = compute_confidence_interval(.data[['anya']])[2],
+                anya_high = compute_confidence_interval(.data[['anya']])[3],
+                anya = compute_confidence_interval(.data[['anya']])[1],
+                
+                passer_rating_low = compute_confidence_interval(.data[['passer_rating']])[2],
+                passer_rating_high = compute_confidence_interval(.data[['passer_rating']])[3],
+                passer_rating = compute_confidence_interval(.data[['passer_rating']])[1]
+      )
+    
+    pressure_low <- confidence_scatter_pressure$pressure_low
+    pressure_high <- confidence_scatter_pressure$pressure_high
+    actual_low <- confidence_scatter_pressure[[paste0(dependent_var, "_low")]]
+    actual_high <- confidence_scatter_pressure[[paste0(dependent_var, "_high")]]
     
     
     if (input$average_cluster) {
-      confidence_scatter_pressure <- scatter_pressure_data |> 
-        group_by(Group) |> 
-        summarize(pressure_mean = compute_confidence_interval(.data[["sacks_per_dropback"]])[1],,
-                  pressure_low = compute_confidence_interval(.data[["sacks_per_dropback"]])[2],
-                  pressure_high = compute_confidence_interval(.data[["sacks_per_dropback"]])[3],
-                  
-                  epa_low = compute_confidence_interval(.data[['epa']])[2],
-                  epa_high = compute_confidence_interval(.data[['epa']])[3],
-                  epa = compute_confidence_interval(.data[['epa']])[1],
-                  
-                  anya_low = compute_confidence_interval(.data[['anya']])[2],
-                  anya_high = compute_confidence_interval(.data[['anya']])[3],
-                  anya = compute_confidence_interval(.data[['anya']])[1],
-                  
-                  passer_rating_low = compute_confidence_interval(.data[['passer_rating']])[2],
-                  passer_rating_high = compute_confidence_interval(.data[['passer_rating']])[3],
-                  passer_rating = compute_confidence_interval(.data[['passer_rating']])[1]
-        )
       
-      pressure_low <- confidence_scatter_pressure$pressure_low
-      pressure_high <- confidence_scatter_pressure$pressure_high
-      actual_low <- confidence_scatter_pressure[[paste0(dependent_var, "_low")]]
-      actual_high <- confidence_scatter_pressure[[paste0(dependent_var, "_high")]]
       
       p <- ggplot(data = confidence_scatter_pressure, aes(x = pressure_mean, y = .data[[dependent_var]], 
-                                                    color = Group,
-                                                    text = paste("Group:", Group)),
+                                                          color = Group,
+                                                          text = paste("Group:", Group, "<br>",
+                                                                       "Average Sacks per Dropback:", round(pressure_mean, 4), "<br>",
+                                                                       glue("Average {input$dependent_var}:"), round(.data[[dependent_var]], 4))),
                   size = .1) + 
         geom_point(alpha = .5) +
         scale_color_manual(values = group_color_assignments()) +
@@ -245,19 +255,28 @@ function(input, output, session) {
         ylab(input$dependent_var) +
         geom_point(alpha = .7, size = 1) +
         geom_errorbar(aes(ymin = actual_low, ymax = actual_high)) +
-        geom_errorbarh(aes(xmin = pressure_low, xmax = pressure_high))
+        geom_errorbarh(aes(xmin = pressure_low, xmax = pressure_high)) +
+        coord_cartesian(xlim = c(min(qb_all_years_comp[["sacks_per_dropback"]], na.rm = TRUE),
+                                 max(qb_all_years_comp[["sacks_per_dropback"]], na.rm = TRUE)),
+                        ylim = c(min(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE),
+                                 max(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE))) 
     }
     else {
-    
-    p <- ggplot(data = scatter_pressure_data, aes(x = sacks_per_dropback, y = .data[[dependent_var]], 
-                                         color = Group,
-                                         text = paste("QB:", passer_player_name)),
-                size = .1) + 
-      geom_point(alpha = .5) +
-      scale_color_manual(values = group_color_assignments()) +
-      ggtitle(glue("Pressure Sensitivity")) +
-      xlab("Sacks per Dropback") +
-      ylab(input$dependent_var)
+      qb_clean <- qb_clean |> 
+        rename(epa = qb_epa,
+               anya = any_a)
+      p <- ggplot(data = scatter_pressure_data, aes(x = sacks_per_dropback, y = .data[[dependent_var]], 
+                                                    color = Group,
+                                                    text = paste("QB:", passer_player_name)),
+                  size = .1) + 
+        geom_point(alpha = .5) +
+        scale_color_manual(values = group_color_assignments()) +
+        ggtitle(glue("Pressure Sensitivity")) +
+        xlab("Sacks per Dropback") +
+        ylab(input$dependent_var) +
+        coord_cartesian(xlim = c(0, .45),
+                        ylim = c(min(qb_clean[[paste0(dependent_var)]], na.rm = TRUE),
+                                 max(qb_clean[[paste0(dependent_var)]], na.rm = TRUE))) 
     }
     
     ggplotly(p, tooltip = "text")
@@ -407,7 +426,7 @@ function(input, output, session) {
     filtered_qb_data <- filtered_qb_clean() |> 
       mutate(Group = case_when(
         passer_player_name == "B.Purdy" ~ "Brock Purdy",
-        passer_player_name == input$qb_name ~ "Selected QB",
+        passer_player_name == input$qb_name ~ glue("{input$qb_name}"),
         passer_player_name %in% coached_qbs ~ glue("{input$coach}'s QBs"),
         TRUE ~ "Other QBs"
       ))
@@ -429,7 +448,7 @@ function(input, output, session) {
     bg3d(color = 'white')
     col_values <-   group_color_assignments()
     size_values <- setNames(c(3, 3, 1, 1, .8),
-                            c("Brock Purdy", "Selected QB", glue("{input$coach}'s QBs"), "Other QBs"))
+                            c("Brock Purdy", glue("{input$qb_name}"), glue("{input$coach}'s QBs"), "Other QBs"))
     qb_colors <- col_values[filtered_qb_data$Group]
     qb_sizes <- size_values[filtered_qb_data$Group]
     

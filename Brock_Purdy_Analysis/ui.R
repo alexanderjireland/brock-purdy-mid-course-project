@@ -64,6 +64,11 @@ fluidPage(
                     "Average of each Cluster",
                     FALSE),
       
+      sliderInput("min_pressure_rate",
+                  "Select Minimum Sacks per Dropback",
+                  min = 0, max = .45, value = 0, step = .01, 
+                  animate = TRUE),
+      
       textOutput("high_rush_explanation"),
       
       textOutput("stat_explanation"),
