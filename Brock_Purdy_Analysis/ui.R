@@ -139,7 +139,8 @@ dashboardPage(
                        h4("3. Passer Rating"),
                        p("Passer rating is calculated based on completions, passing yards, touchdowns, and interceptions per attempt, generating a score between 0 and 158.3 that is designed to summarize a quarterback’s effectiveness. A higher score indicates better performance. While passer rating is useful for comparing QBs within a season, it has limitations as it does not account for sacks, rushing ability, or game context."),
                        p(strong("Combining ANY/A, EPA, and Passer Rating provides a well-rounded approach to evaluating quarterback performance, capturing efficiency (ANY/A), impact on scoring (EPA), and traditional passing effectiveness (Passer Rating).")),
-                       
+                       h2("Conclusion"),
+                       p("This app aims to give insight into Brock Purdy's true skill apart from the elite support surrounding him. This is, of course, a quite challenging thing to do. To approach this question, we examine the aforementioned quarterback metrics for Brock Purdy in high-pressure situations and heavy vs. light rushing games. In addition, we created models for each metric designed to predict a quartterback's EPA, ANY/A, or Passer Rating depending on the following variables: Yards After the Catch (YAC), Percentage of Passing Yards from YAC, Sacks per Dropback, Short Pass Attempts, Percentage of Short Passes, and Total Rushing Yards. An elite quarterback would be thought to outperform their predicted metric, on average. Finally, we compare Purdy to other quarterbacks coached by Kyle Shanahan to see how Shanahan's offensive playmaking factors into Purdy's metrics. We also compare Purd to the top ten highest paid quarterbacks per year (as of 2024), to evaluate where he compares to these play-makers.")
                        
                        
                        
