@@ -213,7 +213,7 @@ function(input, output, session) {
     
     p <- ggplot(data = filtered_qb_comparison_grouped() |> mutate(Group = factor(Group, levels = c("Brock Purdy", glue("{input$qb_name}"), "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))),
                 aes(x = Group, y = .data[[paste0("actual_qb_", dependent_var)]]))+
-      ylab(input$dependent_var) +
+      ylab(glue("Average {input$dependent_var}")) +
       xlab("Quarterback Group") +
       geom_boxplot(aes(fill = Group), width = .6, alpha = .7) + 
       geom_jitter(aes(color = Group,

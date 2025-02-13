@@ -1,4 +1,7 @@
 # brock-purdy-mid-course-project
+
+Link to rshiny app: 
+
 # Evaluating Brock Purdy’s True Skill
 ![Brock Purdy Stats](images/brockpurdy.jpg)
 
@@ -24,7 +27,7 @@ Purdy is further supported by his head coach, Kyle Shanahan, who is known for hi
 
 The 49ers have made it clear they intend to significantly increase their quarterback’s compensation this offseason, raising his current average salary of $934,252 to $50 million or more. This would place Purdy among the highest-paid quarterbacks in the NFL, but does his skill really justify such a contract?
 
-# Key Analysis Components
+# Key Analysis Metrics
 Metrics for measuring quarterback skill:
 
 > ## 1. Expected Points Added (EPA)
@@ -96,7 +99,7 @@ Each variable in the models was found to be statistically significant with **p-v
 To ensure a robust and accurate analysis, we utilized high-quality data from the following sources:
 
 - **nflfastR**: The primary source for **play-by-play data**, which includes detailed game-level events such as passing, rushing, and defensive plays. This dataset is widely used for advanced NFL analytics. The data can be accessed via GitHub: [nflfastR Repository](https://github.com/nflverse/nflfastR).
-- **Pro Football Reference**: Used for **coaching data**, to assign head coaches to each team per season. If multiple coaches led a team in a given year, the coach with the most games coached was assigned as that season’s head coach. Coaching data can be retrieved via [Pro Football Reference](https://www.pro-football-reference.com/) and processed using `retrieving_coaching_data.ipynb`.
+- **Pro Football Reference**: Used for **coaching data**, to assign head coaches to each team per season. If multiple coaches led a team in a given year, the individual with the most games coached was assigned as that season’s head coach. Coaching data can be retrieved via [Pro Football Reference](https://www.pro-football-reference.com/) and processed using `retrieving_coaching_data.ipynb`.
 - **Quarterback Salary Data**: The salary data for quarterbackswas integrated into the analysis to compare performance versus compensation. Salary data was sourced from [Over The Cap](https://overthecap.com/position/quarterback/2024#google_vignette).
 
   The **top 10 highest-paid quarterbacks in 2024** based on APY are:
@@ -118,3 +121,5 @@ When preparing and analyzing the dataset, the following considerations were made
 - **Team Naming Conventions**: All teams are referenced using their **current franchise names** (e.g., the Oakland Raiders are listed as the **Las Vegas Raiders**).
 - **Quarterback Selection Criteria**: Only quarterbacks who attempted **more than 10 passes in a game** were included in the analysis to ensure meaningful sample sizes.
 - **Coach Assignment**: Head coaches were assigned based on **team and year**, ensuring that the individual who coached the most games in a season was credited as that year’s coach.
+
+# Conclusion
