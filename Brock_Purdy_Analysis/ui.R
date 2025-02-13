@@ -19,7 +19,7 @@ dashboardPage(
       menuItem("Home", tabName = "home", icon = icon("home")),
       menuItem("High-Pressure Situations", tabName = "pressure", icon = icon("chart-line")),
       menuItem("High-Rushing Games", tabName = "rushing", icon = icon("running")),
-      menuItem("Short Passing Games", tabName = "shortpass", icon = icon("football-ball")),
+      #menuItem("Short Passing Games", tabName = "shortpass", icon = icon("football-ball")),
       menuItem("Overall Performance vs. Other QBs", tabName = "performance", icon = icon("balance-scale")),
       menuItem("Predictive Model Analysis", tabName = "model", icon = icon("cogs")),
       menuItem("Exploratory Playground", tabName = "exploratory", icon = icon("flask"))
@@ -66,14 +66,12 @@ dashboardPage(
                            "Select Metric",
                            choices = c("EPA", "ANY/A", "Passer Rating")),
                
+               textOutput("stat_explanation"),
+               
                sliderInput("max_rush_yds",
                            "Games With Rushing Yards Between:",
                            min = 0, max = 400, value = c(0, 400), step = 10,
                            animate = TRUE),
-               
-               checkboxInput("high_rush",
-                             "High Rushing Support",
-                             FALSE),
                
                sliderInput("min_pressure_rate",
                            "Select Minimum Sacks per Dropback",
@@ -81,8 +79,6 @@ dashboardPage(
                            animate = TRUE),
                
                textOutput("high_rush_explanation"),
-               
-               textOutput("stat_explanation"),
                
                textOutput('qb_error'),
                
@@ -97,29 +93,67 @@ dashboardPage(
                ),
                tabItem(tabName = "pressure",
                        h2("Purdy under High-Pressure Situations"),
-                       fluidRow(
-                         box(width = 12, plotlyOutput("scatter_pressure", height = 400))
-                       ),
-                       checkboxInput("average_cluster",
-                                     "Average of each Cluster",
-                                     FALSE),
-                       fluidRow(
-                         box(width = 12, plotlyOutput("average_pressure_line", height = 400))
+                       
+                       tabsetPanel(
+                         tabPanel("Distribution of Pressure",
+                                  fluidRow(
+                                    box(width = 12, plotlyOutput("pressureBoxPlot", height = 600))
+                                  )
+                         ),
+                         tabPanel("Pressure's Influence on Metric Outcomes",
+                                  fluidRow(
+                                    box(width = 12, plotlyOutput("scatter_pressure", height = 400))
+                                  ),
+                                  checkboxInput("average_cluster",
+                                                "Average of Each Group",
+                                                FALSE),
+                                  fluidRow(
+                                    box(width = 12, plotlyOutput("average_pressure_line", height = 400))
+                                  )
+                         )
                        )
                ),
                tabItem(tabName = "rushing",
                        h2("Purdy's Performance in High-Rushing Games"),
-                       fluidRow(
-                         box(width = 12, plotlyOutput("runBoxPlot", height = 700))
+                       
+                       tabsetPanel(
+                         tabPanel("Distribution of Rushing Yards per Game",
+                                  fluidRow(
+                                    box(width = 12, plotlyOutput("runBoxPlot", height = 700))
+                                  )
+                         ),
+                         tabPanel("Rushing's Influence on Metric Outcomes",
+                                  fluidRow(
+                                    box(width = 12, plotlyOutput("scatter_rush", height = 400))
+                                  ),
+                                  checkboxInput("rush_lines",
+                                                "Generate Regression Lines",
+                                                FALSE),
+                                  checkboxInput("average_cluster",
+                                                "Average of Each Group",
+                                                FALSE),
+                                  fluidRow(
+                                    box(width = 12, plotlyOutput("heavy_light_rush_boxplot", height = 700))
+                                  ),
+                                  sliderInput("heavy_light_slider",
+                                              "Select High-Low Rushing Yards Cutoff",
+                                              min = 80, max = 140, value = 113, step = 1)
+                         )
                        )
+                       
+                       
+                       
                ),
-               tabItem(tabName = "shortpass",
-                       h2("Purdy's Performance in Short Passing Games")
-               ),
+               #tabItem(tabName = "shortpass",
+               #        h2("Purdy's Performance in Short Passing Games")
+               #),
                tabItem(tabName = "performance", 
                        h2("Evaluating Purdy's Overall Performance vs. Other QBs"),
+                       checkboxInput("high_rush",
+                                     "Inspect Games with Over 165 Rushing Yards",
+                                     FALSE),
                        fluidRow(
-                         box(width = 12, plotlyOutput("boxplot", height = 500))
+                         box(width = 12, plotlyOutput("qbcompareboxplot", height = 700))
                        )
                ),
                tabItem(tabName = "model",
@@ -127,13 +161,11 @@ dashboardPage(
                        fluidRow(
                          box(width = 12, plotlyOutput("plot_model_actual", height = 500))
                        ),
-                       fluidRow(
-                       box(width = 12, checkboxInput("average_cluster",
+                       checkboxInput("average_cluster",
                                      "Average of each Cluster",
-                                     FALSE), height = 60)
-                       ),
+                                     FALSE),
                        fluidRow(
-                         box(width = 12, DTOutput("qb_games_table"))
+                         box(width = 12, div(style = "overflow-x: auto;", DTOutput("qb_games_table")))
                        )
                ),
                tabItem(tabName = "exploratory",

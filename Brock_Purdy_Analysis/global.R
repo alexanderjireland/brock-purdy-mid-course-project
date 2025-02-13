@@ -103,6 +103,7 @@ qb_all_years_comp <- qb_clean |>
             num_games = n(),
             avg_salary_year = mean(avg_year),
             sacks_per_dropback = mean(sacks_per_dropback),
+            total_rush_yds = mean(total_rush_yds),
             retired = first(retired))
 
 total_games_played_df <- qb_all_years_comp |> 

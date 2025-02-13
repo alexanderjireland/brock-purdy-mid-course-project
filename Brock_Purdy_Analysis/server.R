@@ -145,6 +145,20 @@ function(input, output, session) {
              c("Brock Purdy", glue("{input$qb_name}"), "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))
   })
   
+  heavy_light_group_color_assignments <- reactive({
+    setNames(c("#8C1515", "#5E0F0F",
+               "#1F497D", "#162F55",
+               "#5F9EA0", "#4682B4",
+               "#CBB677", "#B8860B",
+               "#D9D9D9", "#808080"),
+             c("Brock Purdy (Light Rush)", "Brock Purdy (Heavy Rush)",
+               glue("{input$qb_name} (Light Rush)"), glue("{input$qb_name} (Heavy Rush)"),
+               "Top 10 Highest Paid QBs (Light Rush)", "Top 10 Highest Paid QBs (Heavy Rush)",
+               glue("{input$coach}'s QBs (Light Rush)"), glue("{input$coach}'s QBs (Heavy Rush)"),
+               "Other QBs (Light Rush)", "Other QBs (Heavy Rush)")
+    )
+  })
+  
   output$stat_explanation <- renderText({
     explanations <- list(
       "ANY/A" = "Adjusted Net Yards per Attempt (ANY/A) factors in passing yards, touchdowns, interceptions, and sacks.",
@@ -161,7 +175,49 @@ function(input, output, session) {
     return(NULL)
   })
   
-  
+  output$pressureBoxPlot <- renderPlotly({
+    
+    dependent_var <- dependent_var_hashmap[input$dependent_var]
+    
+    coached_qbs <- qb_clean |> 
+      filter(coach == input$coach) |> 
+      pull(passer_player_name)
+    
+    scatter_data <-  filtered_qb_clean() |> 
+      rename(epa = qb_epa,
+             anya = any_a) |> 
+      mutate(coached_group = if_else(passer_player_name %in% coached_qbs,
+                                     glue("{input$coach}'s QBs"),
+                                     "Other QBs")) |> 
+      mutate(Group = case_when(
+        passer_player_name == "B.Purdy" ~ "Brock Purdy",
+        passer_player_name == input$qb_name ~ glue("{input$qb_name}"),
+        passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
+        TRUE ~ coached_group
+      )) |> 
+      mutate(Group = factor(Group, levels = c("Other QBs", glue("{input$coach}'s QBs"), "Top 10 Highest Paid QBs", glue("{input$qb_name}"), "Brock Purdy")))
+    
+    p <- ggplot(scatter_data, aes(x = Group, y = sacks_per_dropback, fill = Group)) + 
+      geom_violin(aes(fill = Group), alpha = .4, draw_quantiles = c(.25, .5, .75)) +
+      geom_boxplot(aes(fill = Group), width = .6, alpha = .7) + 
+      geom_jitter(aes(color = Group,
+                      text = paste0("QB: ", passer_player_name, "<br>",
+                                    "Pressure: ", round(sacks_per_dropback, 2), " sacks/dropback", "<br>",
+                                    input$dependent_var, ": ", round(.data[[paste0(dependent_var)]], 2))),
+                  width = .2, alpha = .6, size = .2) + 
+      ggtitle("Distribution of Pressure by QB Group") + 
+      xlab("Quarterback Group") + 
+      ylab("Sacks per Dropback in a Game") + 
+      theme_minimal(base_size = 14) +
+      theme(
+        axis.text.x = element_text(angle = 15, hjust = 1, size = 12)
+      ) +
+      scale_color_manual(values = group_color_assignments()) +
+      scale_fill_manual(values = group_color_assignments())
+    
+    ggplotly(p, tooltip = 'text') |> 
+      layout(height = 600)
+  }) 
   
   output$runBoxPlot <- renderPlotly({
     
@@ -208,7 +264,7 @@ function(input, output, session) {
   })
   
   
-  output$boxplot <- renderPlotly({
+  output$qbcompareboxplot <- renderPlotly({
     dependent_var <- dependent_var_hashmap[input$dependent_var]
     
     p <- ggplot(data = filtered_qb_comparison_grouped() |> mutate(Group = factor(Group, levels = c("Brock Purdy", glue("{input$qb_name}"), "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))),
@@ -232,6 +288,153 @@ function(input, output, session) {
     
     ggplotly(p, tooltip = "text") |> 
       layout(height = 700)
+  })
+  
+  
+  
+  output$scatter_rush <- renderPlotly({
+    dependent_var <- dependent_var_hashmap[input$dependent_var]
+    
+    confidence_scatter_rush <- scatter_pressure_data() |> 
+      group_by(Group) |> 
+      summarize(rush_mean = compute_confidence_interval(.data[["total_rush_yds"]])[1],
+                rush_low = compute_confidence_interval(.data[["total_rush_yds"]])[2],
+                rush_high = compute_confidence_interval(.data[["total_rush_yds"]])[3],
+                
+                epa_low = compute_confidence_interval(.data[['epa']])[2],
+                epa_high = compute_confidence_interval(.data[['epa']])[3],
+                epa = compute_confidence_interval(.data[['epa']])[1],
+                
+                anya_low = compute_confidence_interval(.data[['anya']])[2],
+                anya_high = compute_confidence_interval(.data[['anya']])[3],
+                anya = compute_confidence_interval(.data[['anya']])[1],
+                
+                passer_rating_low = compute_confidence_interval(.data[['passer_rating']])[2],
+                passer_rating_high = compute_confidence_interval(.data[['passer_rating']])[3],
+                passer_rating = compute_confidence_interval(.data[['passer_rating']])[1]
+      )
+    
+    rush_low <- confidence_scatter_rush$rush_low
+    rush_high <- confidence_scatter_rush$rush_high
+    actual_low <- confidence_scatter_rush[[paste0(dependent_var, "_low")]]
+    actual_high <- confidence_scatter_rush[[paste0(dependent_var, "_high")]]
+    
+    
+    if (input$average_cluster) {
+      qb_clean <- qb_clean |> 
+        rename(epa = qb_epa,
+               anya = any_a)
+      
+      p <- ggplot(data = confidence_scatter_rush, aes(x = rush_mean, y = .data[[dependent_var]], 
+                                                      color = Group,
+                                                      text = paste("Group:", Group, "<br>",
+                                                                   "Average Rushing Yards:", round(rush_mean, 2), "<br>",
+                                                                   glue("Average {input$dependent_var}:"), round(.data[[dependent_var]], 4))),
+                  size = .1) + 
+        geom_point(alpha = .5) +
+        scale_color_manual(values = group_color_assignments()) +
+        ggtitle(glue("{input$dependent_var} vs. Rushing Yards")) +
+        xlab("Rushing Yards") +
+        ylab(input$dependent_var) +
+        geom_point(alpha = .7, size = 1) +
+        geom_errorbar(aes(ymin = actual_low, ymax = actual_high)) +
+        geom_errorbarh(aes(xmin = rush_low, xmax = rush_high)) +
+        coord_cartesian(xlim = c(0, 400),
+                        ylim = c(min(qb_clean[[paste0(dependent_var)]], na.rm = TRUE),
+                                 max(qb_clean[[paste0(dependent_var)]], na.rm = TRUE)))
+    }
+    else if (input$rush_lines) {
+      qb_clean <- qb_clean |> 
+        rename(epa = qb_epa,
+               anya = any_a)
+      p <- ggplot(data = scatter_pressure_data(), aes(x = total_rush_yds, y = .data[[dependent_var]], 
+                                                      color = Group,
+                                                      text = paste("QB:", passer_player_name)),
+                  size = .1) + 
+        scale_color_manual(values = group_color_assignments()) +
+        scale_fill_manual(values = group_color_assignments()) +
+        ggtitle(glue("{input$dependent_var} vs. Rushing Yards")) +
+        xlab("Rushing Yards") +
+        ylab(input$dependent_var) +
+        geom_smooth(method = "lm", aes(group = Group, fill = Group), linetype = "dashed", alpha = .3) +
+        # Add R^2 and equations of each line
+        coord_cartesian(xlim = c(0, 400),
+                        ylim = c(min(qb_clean[[paste0(dependent_var)]], na.rm = TRUE),
+                                 max(qb_clean[[paste0(dependent_var)]], na.rm = TRUE))) 
+    }
+    
+    else {
+      qb_clean <- qb_clean |> 
+        rename(epa = qb_epa,
+               anya = any_a)
+      p <- ggplot(data = scatter_pressure_data(), aes(x = total_rush_yds, y = .data[[dependent_var]], 
+                                                      color = Group,
+                                                      text = paste("QB:", passer_player_name)),
+                  size = .1) + 
+        geom_point(alpha = .5) +
+        scale_color_manual(values = group_color_assignments()) +
+        ggtitle(glue("{input$dependent_var} vs. Rushing Yards")) +
+        xlab("Rushing Yards") +
+        ylab(input$dependent_var) +
+        coord_cartesian(xlim = c(0, 400),
+                        ylim = c(min(qb_clean[[paste0(dependent_var)]], na.rm = TRUE),
+                                 max(qb_clean[[paste0(dependent_var)]], na.rm = TRUE))) 
+    }
+    
+    ggplotly(p, tooltip = "text")
+  })
+  
+  output$heavy_light_rush_boxplot <- renderPlotly({
+    dependent_var <- dependent_var_hashmap[input$dependent_var]
+    
+    cutoff <- input$heavy_light_slider
+    
+    coached_qbs <- qb_clean |> 
+      filter(coach == input$coach) |> 
+      pull(passer_player_name)
+    
+    heavy_light_df <- filtered_qbs() |> 
+      rename(epa = qb_epa,
+             anya = any_a) |> 
+      mutate(Group = case_when(
+        passer_player_name == "B.Purdy" & total_rush_yds > cutoff ~ "Brock Purdy (Heavy Rush)",
+        passer_player_name == "B.Purdy" & total_rush_yds <= cutoff ~ "Brock Purdy (Light Rush)",
+        passer_player_name == input$qb_name & total_rush_yds > cutoff ~ glue("{input$qb_name} (Heavy Rush)"),
+        passer_player_name == input$qb_name & total_rush_yds <= cutoff ~ glue("{input$qb_name} (Light Rush)"),
+        passer_player_name %in% ten_highest_paid_qbs_2024 & total_rush_yds > cutoff ~ "Top 10 Highest Paid QBs (Heavy Rush)",
+        passer_player_name %in% ten_highest_paid_qbs_2024 & total_rush_yds <= cutoff ~ "Top 10 Highest Paid QBs (Light Rush)",
+        passer_player_name %in% coached_qbs & total_rush_yds > cutoff ~ glue("{input$coach}'s QBs (Heavy Rush)"),
+        passer_player_name %in% coached_qbs & total_rush_yds <= cutoff ~ glue("{input$coach}'s QBs (Light Rush)"),
+        total_rush_yds > cutoff ~ "Other QBs (Heavy Rush)",
+        TRUE ~ "Other QBs (Light Rush)"
+      )) |> 
+      mutate(Group = factor(Group, levels = c("Brock Purdy (Light Rush)", "Brock Purdy (Heavy Rush)",
+                                              glue("{input$qb_name} (Light Rush)"), glue("{input$qb_name} (Heavy Rush)"), 
+                                              "Top 10 Highest Paid QBs (Light Rush)", "Top 10 Highest Paid QBs (Heavy Rush)", 
+                                              glue("{input$coach}'s QBs (Light Rush)"), glue("{input$coach}'s QBs (Heavy Rush)"), 
+                                              "Other QBs (Light Rush)", "Other QBs (Heavy Rush)"))) 
+    
+    p <- ggplot(heavy_light_df, aes(x = Group, y = .data[[dependent_var]])) +
+      geom_boxplot(aes(fill = Group), width = .5, alpha = .7, outlier.shape = NA) + 
+      geom_jitter(aes(color = Group,
+                      text = paste0("QB: ", passer_player_name, "<br>",
+                                    input$dependent_var, ": ", round(.data[[dependent_var]], 2), "<br>",
+                                    "Rushing Yards: ", total_rush_yds)),
+                  width = .3, alpha = .6, size = .2) + 
+      ggtitle(glue("{input$dependent_var} for Light and Heavy Rush Games")) +
+      ylab(glue("{input$dependent_var}")) +
+      xlab("Quarterback Group") +
+      theme_minimal(base_size = 14) +
+      theme(
+        axis.text.x = element_blank()
+      ) +
+      scale_x_discrete(expand = c(.2,.2)) +
+      scale_color_manual(values = heavy_light_group_color_assignments()) +
+      scale_fill_manual(values = heavy_light_group_color_assignments())
+    
+    ggplotly(p, tooltip = "text") |> 
+      layout(legend = list(orientation = "h", x=.5, xanchor = "center"))
+    
   })
   
   output$scatter_pressure <- renderPlotly({
@@ -291,8 +494,6 @@ function(input, output, session) {
   
   output$average_pressure_line <- renderPlotly({
     
-
-    
     dependent_var <- dependent_var_hashmap[input$dependent_var]
     
     get_stat_summary <- function(threshold, stat_col){
@@ -335,7 +536,7 @@ function(input, output, session) {
     
     thresholds <- seq(0, .13, by = .01)
     stat_summary_thresholds <- map_dfr(thresholds, ~ get_stat_summary(.x, stat_col = dependent_var))
-
+    
     p <- ggplot(stat_summary_thresholds |> 
                   mutate(Group = factor(Group, levels = c("Brock Purdy", glue("{input$qb_name}"), "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))), 
                 aes(x = min_pressure_rate, y = mean_stat, color = Group, fill = Group), 
@@ -547,6 +748,12 @@ function(input, output, session) {
   })
   
   observeEvent(input$reset_input, {
-    shinyjs::reset("side-panel")
+    updateSliderInput(session, "year_range", value = c(1999, 2024))
+    updateSelectInput(session, "coach", selected = "Kyle Shanahan")
+    updateCheckboxInput(session, "active_players", value = FALSE)
+    updateSelectInput(session, "qb_name", selected = "B.Purdy")
+    updateSelectInput(session, "dependent_var", selected = "EPA")
+    updateSliderInput(session, "max_rush_yds", value = c(0, 400))
+    updateSliderInput(session, "min_pressure_rate", value = 0)
   })
 }
