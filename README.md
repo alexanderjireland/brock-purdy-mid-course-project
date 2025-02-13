@@ -3,7 +3,7 @@
 Link to rshiny app: 
 
 # Evaluating Brock Purdy’s True Skill
-![Brock Purdy Stats](images/brockpurdy.jpg)
+![Brock Purdy](images/brockpurdy.jpg)
 
 # Introduction
 Brock Purdy’s rapid rise from the final pick of the 2022 NFL Draft to leading the 49ers to deep playoff runs in his first two seasons was nothing short of remarkable. However, after a challenging 2024 season marked by injuries to key teammates and a decline in performance, questions arise about how much of his success is due to his individual talent versus the strength of the elite system around him.
@@ -25,16 +25,16 @@ Purdy’s early success followed by a decline raises critical questions: *To wha
 
 Purdy is further supported by his head coach, Kyle Shanahan, who is known for his elite offensive schemes. 
 
-The 49ers have made it clear they intend to significantly increase their quarterback’s compensation this offseason, raising his current average salary of $934,252 to $50 million or more. This would place Purdy among the highest-paid quarterbacks in the NFL, but does his skill really justify such a contract?
+Brock Purdy's rookie contract will expire next season. The 49ers have made it clear they intend to significantly increase their quarterback’s compensation this offseason, raising his current average salary of $934,252 to $50 million or more. This would place Purdy among the highest-paid quarterbacks in the NFL, but does his skill really justify such a contract?
 
 # Key Analysis Metrics
 Metrics for measuring quarterback skill:
 
 > ## 1. Expected Points Added (EPA)
 >
-> ![Brock Purdy Stats](images/expectedpoints.png)
+> ![EPA Stats](images/expectedpoints.png)
 >
-> Expected Points Added (EPA) per play is a metric that quantifies the impact of each play on a team’s likelihood of scoring. The values for Expected Points (see figure above) were taken from historical data by calculating the average number of points scored by the possessing team according to each down and field position. EPA per play is simply the difference in Expected Points before and after a play. Instead of just measuring yardage, EPA accounts for game context, such as downs, distance to a first down, and field position, to determine how much a play increases or decreases a team’s expected points. For example, a 5-yard gain on a third-and-4 is much more valuable than a 5-yard gain on a third-and-10, as it results in a first down and extends the drive. EPA is an effective metric for measuring quarterback skill because it captures a quarterback’s ability to make plays that meaningfully contribute to scoring.
+> Expected Points Added (EPA) per play is a metric that quantifies the impact of each play on a team’s likelihood of scoring. The values for Expected Points (see figure above) were taken from historical data by calculating the average number of points scored by the possessing team on that drive, based on the down and field position. EPA per play is simply the difference in Expected Points before and after a play. Instead of just measuring yardage, EPA accounts for game context, such as downs, distance to a first down, and field position, to determine how much a play increases or decreases a team’s expected points. For example, a 5-yard gain on a third-and-4 is much more valuable than a 5-yard gain on a third-and-10, as it results in a first down and extends the drive. EPA is an effective metric for measuring quarterback skill because it captures a quarterback’s ability to make plays that meaningfully contribute to scoring.
 >
 > [Learn More](https://bestballstats.com/expected-points-added-a-full-explanation/)
 

@@ -89,7 +89,58 @@ dashboardPage(
              tabItems(
                tabItem(tabName = "home",
                        h2("Home Page"),
-                       p("Welcome!")
+                       p("Welcome!"),
+                       fluidRow(
+                         column(4, img(src = "brockpurdy_warmup.webp", height = "300px")
+                         ),
+                         column(4, img(src = "brockpurdy_nfc.webp", height = "300px")
+                         )
+                       ),
+                       h2("Introduction"),
+                       p("Brock Purdy’s rapid rise from the final pick of the 2022 NFL Draft to leading the 49ers to deep playoff runs in his first two seasons was nothing short of remarkable. However, after a challenging 2024 season marked by injuries to key teammates and a decline in performance, questions arise about how much of his success is due to his individual talent versus the strength of the elite system around him."),
+                       h2("Motivation"),
+                       p("Brock Purdy has had an impressive start to his NFL career with the San Francisco 49ers. Selected very last in the 2022 NFL draft, Purdy had the opportunity to start for the 49ers his rookie year when their veteran quarterback Jimmy Garoppolo and first round pick Trey Lance both became injured. Purdy shot off to an impressive 5-0 in his first five games as a starter, and his success continued as Purdy brought the 49ers to the NFC championship in 2022, where he was forced off the field with an elbow injury and the 49ers ended up losing to the Philadelphia Eagles. The following season (2023) was just as impressive for Purdy, taking the 49ers all the way to the Super Bowl where San Fransisco lost to the Kansas City Chiefs by 3 points in overtime. Purdy’s first two seasons are undeniably impressive. However, the 2024 season proved challenging for Purdy, as his completion percentage, passer rating, and TD-INT ratio all declined amidst a year marked by injuries to key offensive players, most notably running back Christian McCaffrey. The 49ers ended their 2024 season with Purdy’s worst record yet, finishing 6-11."),
+                       p(strong("Purdy’s early success followed by a decline raises critical questions: To what extent is his performance a reflection of his own skill versus the strength of the team around him?")),
+                       p("Purdy benefits from an elite supporting cast, each playing a crucial role in his success:"),
+                       fluidRow(
+                         column(6, tags$li("Trent Williams – Left Tackle (LT): The anchor of the offensive line, responsible for protecting Purdy’s blindside and giving him the time needed to make accurate throws.")
+                                
+                         ), 
+                         column(4, img(src = "trentwilliams.webp", height = "100px"))
+                       ),
+                       fluidRow(
+                         column(6, tags$li("George Kittle – Tight End (TE): A versatile player who excels in both blocking and receiving, providing a reliable target for short and intermediate passes while also contributing to pass protection.")
+                         ),
+                         column(4, img(src = "georgekittle.jpg", height = "100px")
+                                )
+                       ),
+                       fluidRow(
+                         column(6, tags$li("Deebo Samuel & Brandon Aiyuk – Wide Receivers (WR): Dynamic playmakers who create separation, make tough catches, and extend plays after the catch, giving Purdy multiple downfield threats.")
+                         ),
+                         column(4, img(src = "deeboandbrandon.webp", height = "100px")
+                         )
+                       ),
+                       fluidRow(
+                         column(6, tags$li("Christian McCaffrey – Running Back (RB): A dual-threat weapon who not only excels in rushing but also serves as a dependable receiving option, easing pressure on Purdy by keeping defenses off balance.")
+                         ),
+                         column(4, img(src = "christianmccaffrey.webp", height = "100px")
+                         )
+                       ),
+                       p("Purdy is further supported by his head coach, Kyle Shanahan, who is known for his elite offensive schemes."),
+                       img(src = "kyleshanahan.webp", height = "300px"),
+                       p(strong("Brock Purdy's rookie contract will expire next season. The 49ers have made it clear they intend to significantly increase their quarterback’s compensation this offseason, raising his current average salary of $934,252 to $50 million or more. This would place Purdy among the highest-paid quarterbacks in the NFL, but does his skill really justify such a contract?")),
+                       h2("Key Analysis Metrics"),
+                       p("To evaluate Brock Purdy's skill as a quarterback, we examine three metrics:"),
+                       h4("1. Expected Points Added (EPA)"),
+                       img(src = "expectedpoints.png", height = "300px"),
+                       p("Expected Points Added (EPA) per play is a metric that quantifies the impact of each play on a team’s likelihood of scoring. The values for Expected Points (see figure above) were taken from historical data by calculating the average number of points scored by the possessing team according to each down and field position. EPA per play is simply the difference in Expected Points before and after a play. Instead of just measuring yardage, EPA accounts for game context, such as downs, distance to a first down, and field position, to determine how much a play increases or decreases a team’s expected points. For example, a 5-yard gain on a third-and-4 is much more valuable than a 5-yard gain on a third-and-10, as it results in a first down and extends the drive. EPA is an effective metric for measuring quarterback skill because it captures a quarterback’s ability to make plays that meaningfully contribute to scoring."),
+                       h4("2. Adjusted Net Yards per Attempt (ANY/A)"),
+                       p("Adjusted Net Yards per Attempt (ANY/A) is an advanced passing efficiency metric that improves on traditional yards per attempt by incorporating touchdowns, interceptions, and sacks, thus providing a more comprehensive measure of a quarterback’s effectiveness in the passing game. ANY/A can be a valuable tool for comparing performance across different players and seasons."),
+                       h4("3. Passer Rating"),
+                       p("Passer rating is calculated based on completions, passing yards, touchdowns, and interceptions per attempt, generating a score between 0 and 158.3 that is designed to summarize a quarterback’s effectiveness. A higher score indicates better performance. While passer rating is useful for comparing QBs within a season, it has limitations as it does not account for sacks, rushing ability, or game context."),
+                       p(strong("Combining ANY/A, EPA, and Passer Rating provides a well-rounded approach to evaluating quarterback performance, capturing efficiency (ANY/A), impact on scoring (EPA), and traditional passing effectiveness (Passer Rating).")),
+                       
+                       
                        
                        
                        
