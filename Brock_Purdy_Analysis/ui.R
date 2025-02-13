@@ -17,10 +17,10 @@ dashboardPage(
     width = 300,
     sidebarMenu(
       menuItem("Home", tabName = "home", icon = icon("home")),
+      menuItem("Overall Performance vs. Other QBs", tabName = "performance", icon = icon("balance-scale")),
       menuItem("High-Pressure Situations", tabName = "pressure", icon = icon("chart-line")),
       menuItem("High-Rushing Games", tabName = "rushing", icon = icon("running")),
       #menuItem("Short Passing Games", tabName = "shortpass", icon = icon("football-ball")),
-      menuItem("Overall Performance vs. Other QBs", tabName = "performance", icon = icon("balance-scale")),
       menuItem("Predictive Model Analysis", tabName = "model", icon = icon("cogs")),
       menuItem("Exploratory Playground", tabName = "exploratory", icon = icon("flask"))
     )
@@ -37,6 +37,12 @@ dashboardPage(
              wellPanel(
                h4("Filters & Settings"),
                shinyjs::useShinyjs(),
+               
+               selectInput("dependent_var",
+                           "Select Metric",
+                           choices = c("EPA", "ANY/A", "Passer Rating")),
+               
+               textOutput("stat_explanation"),
                
                sliderInput("year_range",
                            "Select Year",
@@ -61,13 +67,6 @@ dashboardPage(
                            multiple = FALSE,
                            selectize = TRUE),
                
-               
-               selectInput("dependent_var",
-                           "Select Metric",
-                           choices = c("EPA", "ANY/A", "Passer Rating")),
-               
-               textOutput("stat_explanation"),
-               
                sliderInput("max_rush_yds",
                            "Games With Rushing Yards Between:",
                            min = 0, max = 400, value = c(0, 400), step = 10,
@@ -90,6 +89,18 @@ dashboardPage(
                tabItem(tabName = "home",
                        h2("Home Page"),
                        p("Welcome!")
+                       
+                       
+                       
+               ),
+               tabItem(tabName = "performance", 
+                       h2("Evaluating Purdy's Overall Performance vs. Other QBs"),
+                       checkboxInput("high_rush",
+                                     "Inspect Games with Over 165 Rushing Yards",
+                                     FALSE),
+                       fluidRow(
+                         box(width = 12, plotlyOutput("qbcompareboxplot", height = 700))
+                       )
                ),
                tabItem(tabName = "pressure",
                        h2("Purdy under High-Pressure Situations"),
@@ -105,7 +116,7 @@ dashboardPage(
                                     box(width = 12, plotlyOutput("scatter_pressure", height = 400))
                                   ),
                                   checkboxInput("average_cluster",
-                                                "Average of Each Group",
+                                                "Average of Each Group (with 95% confidence intervals)",
                                                 FALSE),
                                   fluidRow(
                                     box(width = 12, plotlyOutput("average_pressure_line", height = 400))
@@ -130,14 +141,14 @@ dashboardPage(
                                                 "Generate Regression Lines",
                                                 FALSE),
                                   checkboxInput("average_cluster",
-                                                "Average of Each Group",
+                                                "Average of Each Group (with 95% confidence intervals)",
                                                 FALSE),
                                   fluidRow(
                                     box(width = 12, plotlyOutput("heavy_light_rush_boxplot", height = 700))
                                   ),
                                   sliderInput("heavy_light_slider",
                                               "Select High-Low Rushing Yards Cutoff",
-                                              min = 80, max = 140, value = 113, step = 1)
+                                              min = 80, max = 165, value = 113, step = 1)
                          )
                        )
                        
@@ -147,22 +158,14 @@ dashboardPage(
                #tabItem(tabName = "shortpass",
                #        h2("Purdy's Performance in Short Passing Games")
                #),
-               tabItem(tabName = "performance", 
-                       h2("Evaluating Purdy's Overall Performance vs. Other QBs"),
-                       checkboxInput("high_rush",
-                                     "Inspect Games with Over 165 Rushing Yards",
-                                     FALSE),
-                       fluidRow(
-                         box(width = 12, plotlyOutput("qbcompareboxplot", height = 700))
-                       )
-               ),
                tabItem(tabName = "model",
                        h2("Predictive Model Analysis"),
                        fluidRow(
                          box(width = 12, plotlyOutput("plot_model_actual", height = 500))
                        ),
+                       p("Click on a quarterback to see a table of all their games."),
                        checkboxInput("average_cluster",
-                                     "Average of each Cluster",
+                                     "Average of each Group (with 95% confidence intervals)",
                                      FALSE),
                        fluidRow(
                          box(width = 12, div(style = "overflow-x: auto;", DTOutput("qb_games_table")))

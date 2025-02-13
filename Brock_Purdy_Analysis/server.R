@@ -207,7 +207,7 @@ function(input, output, session) {
                   width = .2, alpha = .6, size = .2) + 
       ggtitle("Distribution of Pressure by QB Group") + 
       xlab("Quarterback Group") + 
-      ylab("Sacks per Dropback in a Game") + 
+      ylab("Sacks per Dropback") + 
       theme_minimal(base_size = 14) +
       theme(
         axis.text.x = element_text(angle = 15, hjust = 1, size = 12)
@@ -269,14 +269,14 @@ function(input, output, session) {
     
     p <- ggplot(data = filtered_qb_comparison_grouped() |> mutate(Group = factor(Group, levels = c("Brock Purdy", glue("{input$qb_name}"), "Top 10 Highest Paid QBs", glue("{input$coach}'s QBs"), "Other QBs"))),
                 aes(x = Group, y = .data[[paste0("actual_qb_", dependent_var)]]))+
-      ylab(glue("Average {input$dependent_var}")) +
+      ylab(glue("Career {input$dependent_var}")) +
       xlab("Quarterback Group") +
       geom_boxplot(aes(fill = Group), width = .6, alpha = .7) + 
       geom_jitter(aes(color = Group,
                       text = paste0("QB: ", passer_player_name, "<br>",
                                     "Average ", input$dependent_var, ": ", round(.data[[paste0("actual_qb_", dependent_var)]], 2))),
                   width = .2, alpha = .6, size = .2) + 
-      ggtitle(glue("Boxplot of Average {input$dependent_var}")) +
+      ggtitle(glue("Boxplot of Career {input$dependent_var}")) +
       theme_minimal(base_size = 14) +
       theme(
         axis.text.x = element_text(angle = 15, hjust = 1, size = 12)
@@ -755,5 +755,6 @@ function(input, output, session) {
     updateSelectInput(session, "dependent_var", selected = "EPA")
     updateSliderInput(session, "max_rush_yds", value = c(0, 400))
     updateSliderInput(session, "min_pressure_rate", value = 0)
+    updateCheckboxInput(session, "average_cluser", value = FALSE)
   })
 }
