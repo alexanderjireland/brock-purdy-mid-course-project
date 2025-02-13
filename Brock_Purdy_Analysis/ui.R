@@ -9,6 +9,7 @@
 
 # Define UI for application
 dashboardPage(
+  skin = "red",
   
   # Application title
   dashboardHeader(title = "Brock Purdy Analysis"),
@@ -27,9 +28,9 @@ dashboardPage(
   ),
   
   dashboardBody(
-    tags$head(
-      tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
-    ),
+    #tags$head(
+    #  tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
+    #),
     
     fluidRow(
       
@@ -147,7 +148,7 @@ dashboardPage(
                                     box(width = 12, plotlyOutput("heavy_light_rush_boxplot", height = 700))
                                   ),
                                   sliderInput("heavy_light_slider",
-                                              "Select High-Low Rushing Yards Cutoff",
+                                              "Select Light-Heavy Rushing Yardage Cutoff",
                                               min = 80, max = 165, value = 113, step = 1)
                          )
                        )

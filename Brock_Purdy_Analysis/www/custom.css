@@ -5,12 +5,16 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #f4f4f4;
+  background-color: #F5F5F5;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: #333333;
 }
 
-.main-header .logo {
+.skin-red .main-header .navbar {
+  background-color: #AA0000;
+}
+
+.skin-red .main-header .logo {
   background-color: #AA0000;
   color: #ffffff;
   border-bottom: 1px solid #AA0000;
