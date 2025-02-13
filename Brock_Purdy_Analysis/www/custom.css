@@ -1,30 +1,32 @@
+/* needs work! */
+
+
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #ffffff;
-  color: #1E1E1E;
+  background-color: #f4f4f4;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #333333;
 }
 
-.navbar, .panel-heading, .btn-primary {
+.main-header .logo {
   background-color: #AA0000;
-  border-color: #AA0000;
   color: #ffffff;
+  border-bottom: 1px solid #AA0000;
+  font-weight: bold;
+  font-size: 18px;
 }
 
-.btn-primary:hover, .btn-primary:focus {
-  background-color: #B3985D;
-  border-color: #B3985D;
+.main-header .navbar {
+  background-color: #AA0000;
+  border-bottom: 1px solid #AA0000;
 }
 
-a, .text-highlight {
-  color: #B3985D;
-}
-
-.panel, .well {
-  border-color: #B3985D;
+.main-sidebar {
+  background-color: #2c3e50;
 }
 
 .plotly {
-  background-color: white;
+  background-color: #ffffff;
 }
