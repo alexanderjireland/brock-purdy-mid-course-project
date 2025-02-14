@@ -195,7 +195,7 @@ function(input, output, session) {
         passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
         TRUE ~ coached_group
       )) |> 
-      mutate(Group = factor(Group, levels = c("Other QBs", glue("{input$coach}'s QBs"), "Top 10 Highest Paid QBs", glue("{input$qb_name}"), "Brock Purdy")))
+      mutate(Group = factor(Group, levels = rev(c("Other QBs", glue("{input$coach}'s QBs"), "Top 10 Highest Paid QBs", glue("{input$qb_name}"), "Brock Purdy"))))
     
     p <- ggplot(scatter_data, aes(x = Group, y = sacks_per_dropback, fill = Group)) + 
       geom_violin(aes(fill = Group), alpha = .4, draw_quantiles = c(.25, .5, .75)) +
@@ -239,7 +239,7 @@ function(input, output, session) {
         passer_player_name %in% ten_highest_paid_qbs_2024 ~ "Top 10 Highest Paid QBs",
         TRUE ~ coached_group
       )) |> 
-      mutate(Group = factor(Group, levels = c("Other QBs", glue("{input$coach}'s QBs"), "Top 10 Highest Paid QBs", glue("{input$qb_name}"), "Brock Purdy")))
+      mutate(Group = factor(Group, levels = rev(c("Other QBs", glue("{input$coach}'s QBs"), "Top 10 Highest Paid QBs", glue("{input$qb_name}"), "Brock Purdy"))))
     
     p <- ggplot(scatter_data, aes(x = Group, y = total_rush_yds, fill = Group)) + 
       geom_violin(aes(fill = Group), alpha = .4, draw_quantiles = c(.25, .5, .75)) +
