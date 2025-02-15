@@ -1,6 +1,6 @@
 # brock-purdy-mid-course-project
 
-Link to rshiny app: 
+Link to rshiny app: https://alexanderireland.shinyapps.io/Brock_Purdy_Analysis_draft/
 
 # Evaluating Brock Purdy’s True Skill
 ![Brock Purdy](images/brockpurdy.jpg)
