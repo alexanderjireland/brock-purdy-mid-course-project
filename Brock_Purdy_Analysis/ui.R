@@ -176,7 +176,7 @@ dashboardPage(
                                   fluidRow(
                                     box(width = 12, plotlyOutput("scatter_pressure", height = 400))
                                   ),
-                                  checkboxInput("average_cluster",
+                                  checkboxInput("average_cluster_pressure",
                                                 "Average of Each Group (with 95% confidence intervals)",
                                                 FALSE),
                                   fluidRow(
@@ -201,7 +201,7 @@ dashboardPage(
                                   checkboxInput("rush_lines",
                                                 "Generate Regression Lines",
                                                 FALSE),
-                                  checkboxInput("average_cluster",
+                                  checkboxInput("average_cluster_rushing",
                                                 "Average of Each Group (with 95% confidence intervals)",
                                                 FALSE),
                                   fluidRow(

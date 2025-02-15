@@ -320,7 +320,7 @@ function(input, output, session) {
     actual_high <- confidence_scatter_rush[[paste0(dependent_var, "_high")]]
     
     
-    if (input$average_cluster) {
+    if (input$average_cluster_rushing) {
       qb_clean <- qb_clean |> 
         rename(epa = qb_epa,
                anya = any_a)
@@ -449,8 +449,10 @@ function(input, output, session) {
     actual_high <- confidence_scatter_pressure[[paste0(dependent_var, "_high")]]
     
     
-    if (input$average_cluster) {
-      
+    if (input$average_cluster_pressure) {
+      qb_clean <- qb_clean |> 
+        rename(epa = qb_epa,
+               anya = any_a)
       
       p <- ggplot(data = confidence_scatter_pressure, aes(x = pressure_mean, y = .data[[dependent_var]], 
                                                           color = Group,
@@ -460,16 +462,15 @@ function(input, output, session) {
                   size = .1) + 
         geom_point(alpha = .5) +
         scale_color_manual(values = group_color_assignments()) +
-        ggtitle(glue("Pressure Sensitivity")) +
+        ggtitle(glue("Pressure Sensitivity on {input$dependent_var}")) +
         xlab("Sacks per Dropback") +
         ylab(input$dependent_var) +
         geom_point(alpha = .7, size = 1) +
         geom_errorbar(aes(ymin = actual_low, ymax = actual_high)) +
         geom_errorbarh(aes(xmin = pressure_low, xmax = pressure_high)) +
-        coord_cartesian(xlim = c(min(qb_all_years_comp[["sacks_per_dropback"]], na.rm = TRUE),
-                                 max(qb_all_years_comp[["sacks_per_dropback"]], na.rm = TRUE)),
-                        ylim = c(min(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE),
-                                 max(qb_all_years_comp[[paste0("actual_qb_", dependent_var)]], na.rm = TRUE))) 
+        coord_cartesian(xlim = c(0, .45),
+                        ylim = c(min(qb_clean[[paste0(dependent_var)]], na.rm = TRUE),
+                                 max(qb_clean[[paste0(dependent_var)]], na.rm = TRUE)))  
     }
     else {
       qb_clean <- qb_clean |> 
